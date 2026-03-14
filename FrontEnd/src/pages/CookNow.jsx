@@ -1,12 +1,45 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecipeContext } from '../context/RecipeContext';
-import { Loader2, ChefHat, Search, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Loader2, ChefHat, Search, ArrowRight, ArrowLeft, Clock } from 'lucide-react';
+
+const cleanIngredientName = (ing) => {
+  let text = ing.split(',')[0].toLowerCase();
+  // Remove numbers, fractions, and special symbols
+  text = text.replace(/[\d\/\½\⅓\¼\¾\⅛\⅜\⅝\⅞\-.]+/g, ' ');
+  // Remove units and common modifiers
+  const wordsToRemove = [
+    'cup', 'cups', 'tbsp', 'tablespoon', 'tablespoons', 'tsp', 'teaspoon', 'teaspoons', 'oz', 'ounce', 'ounces',
+    'lb', 'lbs', 'pound', 'pounds', 'g', 'gram', 'grams', 'kg', 'ml', 'liter', 'liters', 'pinch', 'dash',
+    'clove', 'cloves', 'piece', 'pieces', 'slice', 'slices', 'can', 'cans', 'package', 'packages', 'jar', 'jars',
+    'bunch', 'bunches', 'stalk', 'stalks', 'head', 'heads', 'diced', 'chopped', 'minced', 'sliced', 'crushed',
+    'grated', 'peeled', 'fresh', 'dried', 'ground', 'roasted', 'toasted', 'mashed', 'melted', 'softened', 'large',
+    'medium', 'small', 'whole', 'half', 'quarter', 'taste', 'for', 'to', 'of', 'and'
+  ];
+  const regex = new RegExp(`\\b(${wordsToRemove.join('|')})\\b`, 'gi');
+  text = text.replace(regex, ' ');
+  // Remove special characters besides alphabets
+  text = text.replace(/[^a-z\s]/g, ' ');
+  text = text.replace(/\s+/g, ' ').trim();
+  if (!text) return '';
+  return text.charAt(0).toUpperCase() + text.slice(1);
+};
+
+const parseTime = (timeStr) => {
+  if (!timeStr) return 0;
+  const str = timeStr.toLowerCase();
+  let mins = 0;
+  const hoursMatch = str.match(/(\d+)\s*(?:hr|hour|h)/);
+  if (hoursMatch) mins += parseInt(hoursMatch[1]) * 60;
+  const minsMatch = str.match(/(\d+)\s*(?:min|m)/);
+  if (minsMatch) mins += parseInt(minsMatch[1]);
+  return mins;
+};
 
 const CookNow = () => {
   const navigate = useNavigate();
   const { recipes, loading, error } = useRecipeContext();
-  
+
   const [selectedIngredients, setSelectedIngredients] = useState([]);
   const [ingredientSearchQuery, setIngredientSearchQuery] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
@@ -16,30 +49,8 @@ const CookNow = () => {
   // Extract all unique ingredients from recipes to display as tags
   const allIngredients = useMemo(() => {
     if (!recipes) return [];
-    
+
     const relevantRecipes = dietFilter === 'All' ? recipes : recipes.filter(r => r?.category === dietFilter);
-    
-    // Helper to strip quantities, measurements, and prep words to just get the base ingredient
-    const cleanIngredientName = (ing) => {
-      let text = ing.split(',')[0].toLowerCase();
-      // Remove numbers, fractions, and special symbols
-      text = text.replace(/[\d\/\½\⅓\¼\¾\⅛\⅜\⅝\⅞\-.]+/g, ' ');
-      // Remove units and common modifiers
-      const wordsToRemove = [
-        'cup', 'cups', 'tbsp', 'tablespoon', 'tablespoons', 'tsp', 'teaspoon', 'teaspoons', 'oz', 'ounce', 'ounces', 
-        'lb', 'lbs', 'pound', 'pounds', 'g', 'gram', 'grams', 'kg', 'ml', 'liter', 'liters', 'pinch', 'dash', 
-        'clove', 'cloves', 'piece', 'pieces', 'slice', 'slices', 'can', 'cans', 'package', 'packages', 'jar', 'jars', 
-        'bunch', 'bunches', 'stalk', 'stalks', 'head', 'heads', 'diced', 'chopped', 'minced', 'sliced', 'crushed', 
-        'grated', 'peeled', 'fresh', 'dried', 'ground', 'roasted', 'toasted', 'mashed', 'melted', 'softened', 'large', 
-        'medium', 'small', 'whole', 'half', 'quarter', 'taste', 'for', 'to', 'of', 'and'
-      ];
-      const regex = new RegExp(`\\b(${wordsToRemove.join('|')})\\b`, 'gi');
-      text = text.replace(regex, ' ');
-      // Remove special characters besides alphabets
-      text = text.replace(/[^a-z\s]/g, ' ');
-      text = text.replace(/\s+/g, ' ').trim();
-      return text.charAt(0).toUpperCase() + text.slice(1);
-    };
 
     const ingredientsSet = new Set();
     relevantRecipes.forEach(recipe => {
@@ -73,22 +84,66 @@ const CookNow = () => {
 
   const filteredRecipes = useMemo(() => {
     if (!recipes) return [];
-    return recipes.filter(recipe => {
-      // Filter by ingredients first
-      const hasIngredients = selectedIngredients.length === 0 || selectedIngredients.every(selected => {
-        if (!recipe.ingredients) return false;
-        return recipe.ingredients.some(ri => 
-          typeof ri === 'string' && ri.toLowerCase().includes(selected)
-        );
-      });
+    return recipes.map(recipe => {
+      let matchedCount = 0;
+      let missingIngredients = [];
+      let totalCount = recipe.ingredients ? recipe.ingredients.length : 0;
 
+      if (recipe.ingredients) {
+        const cleanIngs = recipe.ingredients.map(ing => typeof ing === 'string' ? cleanIngredientName(ing) : '');
+
+        if (selectedIngredients.length > 0) {
+          cleanIngs.forEach((cleanIng, idx) => {
+            if (cleanIng && selectedIngredients.includes(cleanIng)) {
+              matchedCount++;
+            } else if (cleanIng) {
+              missingIngredients.push(cleanIng);
+            }
+          });
+        }
+      }
+
+      let matchPercentage = totalCount === 0 ? 0 : (matchedCount / totalCount) * 100;
+
+      let prepMins = parseTime(recipe.prep_time);
+      let cookMins = parseTime(recipe.cook_time);
+      let totalTimeMinutes = prepMins + cookMins;
+
+      return {
+        ...recipe,
+        matchedCount,
+        missingIngredients,
+        matchPercentage,
+        totalTimeMinutes
+      };
+    }).filter(recipe => {
       // Filter by search query second
       const matchesSearch = !recipeSearchQuery || (recipe.title && recipe.title.toLowerCase().includes(recipeSearchQuery.toLowerCase()));
 
       // Filter by Diet third
       const matchesDiet = dietFilter === 'All' || recipe.category === dietFilter;
 
-      return hasIngredients && matchesSearch && matchesDiet;
+      // Ensure 40% threshold is met if user has selected ingredients
+      const matchesPercentage = selectedIngredients.length === 0 || recipe.matchPercentage >= 40;
+
+      return matchesPercentage && matchesSearch && matchesDiet;
+    }).sort((a, b) => {
+      // 1. Sort by match percentage DESC (highest match first)
+      if (selectedIngredients.length > 0 && b.matchPercentage !== a.matchPercentage) {
+        return b.matchPercentage - a.matchPercentage;
+      }
+
+      // 2. Sort by cooking time ASC (fastest to cook first)
+      const aCook = parseTime(a.cook_time);
+      const bCook = parseTime(b.cook_time);
+      if (aCook !== bCook) {
+        return aCook - bCook;
+      }
+
+      // 3. Sort by preparation time ASC (fastest to prep first)
+      const aPrep = parseTime(a.prep_time);
+      const bPrep = parseTime(b.prep_time);
+      return aPrep - bPrep;
     });
   }, [recipes, selectedIngredients, recipeSearchQuery, dietFilter]);
 
@@ -118,12 +173,12 @@ const CookNow = () => {
 
   return (
     <div className="min-h-screen pt-32 pb-12 px-6 max-w-[1200px] mx-auto">
-      
+
       {!hasSearched ? (
         /* STEP 1: Ingredient Selection */
         <div className="max-w-3xl mx-auto flex flex-col items-center relative">
           <div className="w-full flex justify-start mb-8 -ml-4 lg:-ml-12">
-            <button 
+            <button
               onClick={() => navigate('/')}
               className="group flex items-center gap-3 px-5 py-2.5 bg-[#171717]/80 backdrop-blur-md border border-white/10 rounded-full font-medium text-sm text-text-secondary transition-all duration-300 hover:text-white hover:border-accent hover:shadow-[0_0_20px_rgba(37,116,120,0.3)] hover:-translate-x-1"
             >
@@ -148,15 +203,14 @@ const CookNow = () => {
                 <button
                   key={type}
                   onClick={() => { setDietFilter(type); setSelectedIngredients([]); }}
-                  className={`px-5 py-2 md:px-8 md:py-2.5 flex items-center justify-center gap-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
-                    dietFilter === type 
-                      ? type === 'Veg' 
+                  className={`px-5 py-2 md:px-8 md:py-2.5 flex items-center justify-center gap-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${dietFilter === type
+                      ? type === 'Veg'
                         ? 'bg-[#10b981]/20 text-[#10b981] shadow-[0_4px_12px_rgba(16,185,129,0.2)]'
                         : type === 'Non-Veg'
                           ? 'bg-[#ef4444]/20 text-[#ef4444] shadow-[0_4px_12px_rgba(239,68,68,0.2)]'
                           : 'bg-white/10 text-white shadow-[0_4px_12px_rgba(255,255,255,0.1)]'
                       : 'text-text-secondary hover:text-white hover:bg-white/5'
-                  }`}
+                    }`}
                 >
                   {type === 'Veg' && <div className={`w-2 h-2 rounded-full ${dietFilter === 'Veg' ? 'bg-[#10b981]' : 'bg-transparent border border-text-secondary'}`} />}
                   {type === 'Non-Veg' && <div className={`w-2 h-2 rounded-full ${dietFilter === 'Non-Veg' ? 'bg-[#ef4444]' : 'bg-transparent border border-text-secondary'}`} />}
@@ -185,7 +239,7 @@ const CookNow = () => {
               <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wider mb-4">
                 {selectedIngredients.length > 0 ? `${selectedIngredients.length} Ingredients Selected` : 'Popular Ingredients'}
               </h3>
-              
+
               <div className="flex flex-wrap gap-3 max-h-[350px] overflow-y-auto px-1 py-1 custom-scrollbar">
                 {filteredIngredientList.length === 0 ? (
                   <p className="text-text-secondary italic">No ingredients found.</p>
@@ -196,11 +250,10 @@ const CookNow = () => {
                       <button
                         key={idx}
                         onClick={() => toggleIngredient(ingredient)}
-                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${
-                          isSelected 
-                            ? 'bg-accent border-accent text-white shadow-[0_4px_12px_rgba(37,116,120,0.4)] md:-translate-y-0.5' 
+                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border ${isSelected
+                            ? 'bg-accent border-accent text-white shadow-[0_4px_12px_rgba(37,116,120,0.4)] md:-translate-y-0.5'
                             : 'bg-bg-primary/50 border-border-primary text-text-secondary hover:border-text-primary hover:text-text-primary hover:bg-bg-primary'
-                        }`}
+                          }`}
                       >
                         {ingredient}
                       </button>
@@ -211,19 +264,18 @@ const CookNow = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-border-primary">
-              <button 
+              <button
                 onClick={() => setSelectedIngredients([])}
-                className={`py-3 px-6 rounded-xl font-medium transition-colors ${
-                  selectedIngredients.length > 0 
-                  ? 'text-error hover:bg-error/10' 
-                  : 'text-text-secondary opacity-50 cursor-not-allowed'
-                }`}
+                className={`py-3 px-6 rounded-xl font-medium transition-colors ${selectedIngredients.length > 0
+                    ? 'text-error hover:bg-error/10'
+                    : 'text-text-secondary opacity-50 cursor-not-allowed'
+                  }`}
                 disabled={selectedIngredients.length === 0}
               >
                 Clear Selection
               </button>
 
-              <button 
+              <button
                 onClick={() => setHasSearched(true)}
                 className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-bold text-lg transition-all duration-200 bg-accent text-white hover:bg-accent-hover hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(37,116,120,0.4)]"
               >
@@ -239,7 +291,7 @@ const CookNow = () => {
           <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
               <div className="flex flex-wrap items-center gap-3 mb-6">
-                <button 
+                <button
                   onClick={() => navigate('/')}
                   className="group flex items-center gap-2 px-4 py-2 bg-bg-secondary border border-border-primary rounded-full font-medium text-xs md:text-sm text-text-secondary transition-all duration-300 hover:text-white hover:border-accent hover:shadow-[0_0_15px_rgba(37,116,120,0.2)] hover:-translate-x-0.5"
                 >
@@ -247,7 +299,7 @@ const CookNow = () => {
                   Dashboard
                 </button>
                 <span className="text-border-primary text-sm">/</span>
-                <button 
+                <button
                   onClick={() => setHasSearched(false)}
                   className="group flex items-center gap-2 px-4 py-2 bg-accent/10 border border-accent/20 rounded-full font-medium text-xs md:text-sm text-accent transition-all duration-300 hover:bg-accent hover:border-accent hover:shadow-[0_0_15px_rgba(37,116,120,0.4)] hover:text-white"
                 >
@@ -258,26 +310,31 @@ const CookNow = () => {
               <h1 className="text-3xl md:text-4xl font-bold mb-2">
                 Your Recipe Matches
               </h1>
-              <p className="text-text-secondary text-lg">
-                Based on: <span className="text-white font-medium">{selectedIngredients.length > 0 ? selectedIngredients.join(', ') : 'All recipes'}</span>
+              <p className="text-text-secondary text-lg max-w-2xl" title={selectedIngredients.join(', ')}>
+                Based on: <span className="text-white font-medium">
+                  {selectedIngredients.length > 0 
+                    ? (selectedIngredients.length > 6 
+                        ? `${selectedIngredients.slice(0, 6).join(', ')}...` 
+                        : selectedIngredients.join(', ')) 
+                    : 'All recipes'}
+                </span>
               </p>
             </div>
 
             <div className="flex flex-col gap-4 w-full md:w-auto md:min-w-[300px]">
               <div className="flex bg-[#171717] p-1 rounded-xl border border-white/5 shadow-md">
-                 {['All', 'Veg', 'Non-Veg'].map(type => (
+                {['All', 'Veg', 'Non-Veg'].map(type => (
                   <button
                     key={type}
                     onClick={() => { setDietFilter(type); }}
-                    className={`flex-1 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 text-center ${
-                      dietFilter === type 
-                        ? type === 'Veg' 
+                    className={`flex-1 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 text-center ${dietFilter === type
+                        ? type === 'Veg'
                           ? 'bg-[#10b981]/20 text-[#10b981]'
                           : type === 'Non-Veg'
                             ? 'bg-[#ef4444]/20 text-[#ef4444]'
                             : 'bg-white/10 text-white'
                         : 'text-text-secondary hover:text-white hover:bg-white/5'
-                    }`}
+                      }`}
                   >
                     {type}
                   </button>
@@ -301,11 +358,11 @@ const CookNow = () => {
           {filteredRecipes.length === 0 ? (
             <div className="text-center py-20 bg-bg-secondary border border-border-primary rounded-3xl">
               <ChefHat size={64} className="mx-auto text-text-secondary mb-6 opacity-30" />
-              <h3 className="text-2xl font-semibold mb-3 text-text-primary">No recipes found</h3>
+              <h3 className="text-2xl font-semibold mb-3 text-text-primary">No exact matches</h3>
               <p className="text-text-secondary max-w-md mx-auto mb-8">
-                We couldn't find any recipes that use all of those ingredients together. Try removing a few ingredients to get more matches.
+                We couldn't find any recipes that match at least 40% of your ingredients. Try adding more items or clearing your selection!
               </p>
-              <button 
+              <button
                 onClick={() => setHasSearched(false)}
                 className="px-6 py-3 rounded-xl font-medium transition-all duration-200 border border-border-primary hover:bg-white/5 hover:text-white"
               >
@@ -317,21 +374,51 @@ const CookNow = () => {
               {filteredRecipes.map((recipe, index) => (
                 <div key={recipe.id || index} className="flex flex-col bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.5)] hover:border-white/10 group">
                   <div className="relative h-48 overflow-hidden bg-[#222]">
-                    <img 
-                      src={recipe.image_url || 'https://via.placeholder.com/400x300?text=Recipe'} 
-                      alt={recipe.title} 
+                    <img
+                      src={recipe.image_url || 'https://via.placeholder.com/400x300?text=Recipe'}
+                      alt={recipe.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       onError={(e) => { e.target.src = 'https://via.placeholder.com/400x300?text=Recipe' }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-bg-secondary via-transparent to-transparent opacity-80"></div>
                   </div>
-                  
+
                   <div className="p-5 flex flex-col flex-1">
                     <h3 className="text-lg font-bold text-white mb-2 line-clamp-2">{recipe.title}</h3>
-                    <p className="text-sm text-text-secondary mb-5 line-clamp-3 my-auto">
+
+                    {selectedIngredients.length > 0 && recipe.matchPercentage > 0 && (
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between text-xs mb-1.5">
+                          <span className="text-accent font-semibold">{Math.round(recipe.matchPercentage)}% Match</span>
+                          <span className="text-text-secondary flex items-center gap-1"><Clock size={12} />{recipe.totalTimeMinutes} mins</span>
+                        </div>
+                        <div className="w-full bg-border-primary rounded-full h-1.5 overflow-hidden">
+                          <div className="bg-accent h-full transition-all duration-500" style={{ width: `${recipe.matchPercentage}%` }}></div>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedIngredients.length === 0 && (
+                      <p className="text-xs text-text-secondary mb-3 flex items-center gap-1.5">
+                        <Clock size={14} className="text-accent" />
+                        {recipe.totalTimeMinutes} mins total prep & cook
+                      </p>
+                    )}
+
+                    <p className="text-sm text-text-secondary mb-4 my-auto">
                       <span className="font-semibold text-[#f8fafc] mb-1 block">Key Ingredients:</span>
-                      {recipe.ingredients && recipe.ingredients.slice(0, 4).map(i => typeof i === 'string' ? i : '').join(', ')}...
+                      {recipe.ingredients && recipe.ingredients.map(i => typeof i === 'string' ? i : '').join(', ')}
                     </p>
+
+                    {selectedIngredients.length > 0 && recipe.missingIngredients?.length > 0 && (
+                      <div className="mb-4 mt-auto">
+                        <span className="font-semibold text-[#ef4444] text-xs mb-1 block">Missing Ingredients ({recipe.missingIngredients.length}):</span>
+                        <p className="text-xs text-text-secondary line-clamp-2">
+                          {recipe.missingIngredients.join(', ')}
+                        </p>
+                      </div>
+                    )}
+
                     <button className="w-full mt-auto py-3 rounded-xl font-semibold text-sm transition-all duration-200 bg-white/5 border border-white/10 text-white group-hover:bg-accent group-hover:border-accent">
                       View Recipe
                     </button>
