@@ -1,9 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import useApi from '../hooks/useApi';
+import { useNavigate } from 'react-router-dom';
+import { useRecipeContext } from '../context/RecipeContext';
 import { Loader2, ChefHat, Search, ArrowRight, ArrowLeft } from 'lucide-react';
 
 const CookNow = () => {
-  const { data: recipes, loading, error } = useApi('https://cookify-server.onrender.com/api/recipes');
+  const navigate = useNavigate();
+  const { recipes, loading, error } = useRecipeContext();
   
   const [selectedIngredients, setSelectedIngredients] = useState([]);
   const [ingredientSearchQuery, setIngredientSearchQuery] = useState('');
@@ -87,8 +89,12 @@ const CookNow = () => {
   if (loading) {
     return (
       <div className="min-h-screen pt-32 pb-12 px-6 flex flex-col items-center justify-center">
-        <Loader2 size={48} className="animate-spin text-accent mb-4" />
-        <h2 className="text-xl text-text-secondary font-medium animate-pulse">Fetching fresh ingredients...</h2>
+        <div className="w-28 h-28 md:w-36 md:h-36 mb-6 relative">
+          <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-contain mix-blend-screen">
+            <source src="https://res.cloudinary.com/dw4j19xmz/video/upload/v1773475402/Remove_background_project_4_aia7d1.mp4" type="video/mp4" />
+          </video>
+        </div>
+        <h2 className="text-xl md:text-2xl text-text-secondary font-medium animate-pulse mt-2">Fetching fresh ingredients...</h2>
       </div>
     );
   }
@@ -109,7 +115,18 @@ const CookNow = () => {
       
       {!hasSearched ? (
         /* STEP 1: Ingredient Selection */
-        <div className="max-w-3xl mx-auto flex flex-col items-center">
+        <div className="max-w-3xl mx-auto flex flex-col items-center relative">
+          <div className="w-full flex justify-start mb-8 -ml-4 lg:-ml-12">
+            <button 
+              onClick={() => navigate('/')}
+              className="group flex items-center gap-3 px-5 py-2.5 bg-[#171717]/80 backdrop-blur-md border border-white/10 rounded-full font-medium text-sm text-text-secondary transition-all duration-300 hover:text-white hover:border-accent hover:shadow-[0_0_20px_rgba(37,116,120,0.3)] hover:-translate-x-1"
+            >
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 group-hover:bg-accent transition-colors duration-300">
+                <ArrowLeft size={16} className="text-text-secondary group-hover:text-white transition-colors duration-300" />
+              </div>
+              <span className="tracking-wide">Dashboard</span>
+            </button>
+          </div>
           <div className="mb-10 text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-[#f8fafc] to-[#94a3b8] bg-clip-text text-transparent">
               What's in your kitchen?
@@ -190,13 +207,23 @@ const CookNow = () => {
         <div>
           <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-              <button 
-                onClick={() => setHasSearched(false)}
-                className="flex items-center gap-2 text-text-secondary hover:text-white transition-colors mb-4 group font-medium"
-              >
-                <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-1" />
-                Back to Ingredients
-              </button>
+              <div className="flex flex-wrap items-center gap-3 mb-6">
+                <button 
+                  onClick={() => navigate('/')}
+                  className="group flex items-center gap-2 px-4 py-2 bg-bg-secondary border border-border-primary rounded-full font-medium text-xs md:text-sm text-text-secondary transition-all duration-300 hover:text-white hover:border-accent hover:shadow-[0_0_15px_rgba(37,116,120,0.2)] hover:-translate-x-0.5"
+                >
+                  <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+                  Dashboard
+                </button>
+                <span className="text-border-primary text-sm">/</span>
+                <button 
+                  onClick={() => setHasSearched(false)}
+                  className="group flex items-center gap-2 px-4 py-2 bg-accent/10 border border-accent/20 rounded-full font-medium text-xs md:text-sm text-accent transition-all duration-300 hover:bg-accent hover:border-accent hover:shadow-[0_0_15px_rgba(37,116,120,0.4)] hover:text-white"
+                >
+                  <ChefHat size={14} className="group-hover:rotate-12 transition-transform" />
+                  Edit Ingredients
+                </button>
+              </div>
               <h1 className="text-3xl md:text-4xl font-bold mb-2">
                 Your Recipe Matches
               </h1>
