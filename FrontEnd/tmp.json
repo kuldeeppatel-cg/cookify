@@ -1,0 +1,23 @@
+{
+  "_id": "69b3faccd7128ddad45d3303",
+  "id": 1,
+  "title": "Butter Chicken",
+  "category": "Non-Veg",
+  "cuisine": "Indian",
+  "image_url": "https://images.unsplash.com/photo-1603894584115-f73f2ec0a4ad?auto=format&fit=crop&w=800&q=80",
+  "prep_time": "20 mins",
+  "cook_time": "30 mins",
+  "ingredients": [
+    "500g Chicken thighs",
+    "1 cup Tomato puree",
+    "100ml Heavy cream",
+    "2 tbsp Butter",
+    "1 tbsp Garam masala"
+  ],
+  "instructions": [
+    "Marinate chicken in yogurt and spices for 2 hours.",
+    "Sauté tomato puree with butter and ginger-garlic paste.",
+    "Simmer cooked chicken in the tomato gravy and finish with cream.",
+    "Garnish with kasuri methi and serve with Garlic Naan."
+  ]
+}

@@ -11,10 +11,13 @@ const CookNow = () => {
   const [ingredientSearchQuery, setIngredientSearchQuery] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
   const [recipeSearchQuery, setRecipeSearchQuery] = useState('');
+  const [dietFilter, setDietFilter] = useState('All');
 
   // Extract all unique ingredients from recipes to display as tags
   const allIngredients = useMemo(() => {
     if (!recipes) return [];
+    
+    const relevantRecipes = dietFilter === 'All' ? recipes : recipes.filter(r => r?.category === dietFilter);
     
     // Helper to strip quantities, measurements, and prep words to just get the base ingredient
     const cleanIngredientName = (ing) => {
@@ -39,7 +42,7 @@ const CookNow = () => {
     };
 
     const ingredientsSet = new Set();
-    recipes.forEach(recipe => {
+    relevantRecipes.forEach(recipe => {
       if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
         recipe.ingredients.forEach(ing => {
           if (typeof ing === 'string') {
@@ -53,7 +56,7 @@ const CookNow = () => {
       }
     });
     return Array.from(ingredientsSet).sort();
-  }, [recipes]);
+  }, [recipes, dietFilter]);
 
   const toggleIngredient = (ingredient) => {
     if (selectedIngredients.includes(ingredient)) {
@@ -82,9 +85,12 @@ const CookNow = () => {
       // Filter by search query second
       const matchesSearch = !recipeSearchQuery || (recipe.title && recipe.title.toLowerCase().includes(recipeSearchQuery.toLowerCase()));
 
-      return hasIngredients && matchesSearch;
+      // Filter by Diet third
+      const matchesDiet = dietFilter === 'All' || recipe.category === dietFilter;
+
+      return hasIngredients && matchesSearch && matchesDiet;
     });
-  }, [recipes, selectedIngredients, recipeSearchQuery]);
+  }, [recipes, selectedIngredients, recipeSearchQuery, dietFilter]);
 
   if (loading) {
     return (
@@ -134,6 +140,31 @@ const CookNow = () => {
             <p className="text-text-secondary text-lg max-w-2xl mx-auto">
               Select the ingredients you have on hand, and we'll find the perfect recipes you can cook right now.
             </p>
+          </div>
+
+          <div className="flex justify-center mb-10 w-full">
+            <div className="flex bg-[#171717]/80 backdrop-blur-md p-1.5 rounded-2xl border border-white/10 shadow-lg">
+              {['All', 'Veg', 'Non-Veg'].map(type => (
+                <button
+                  key={type}
+                  onClick={() => { setDietFilter(type); setSelectedIngredients([]); }}
+                  className={`px-5 py-2 md:px-8 md:py-2.5 flex items-center justify-center gap-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                    dietFilter === type 
+                      ? type === 'Veg' 
+                        ? 'bg-[#10b981]/20 text-[#10b981] shadow-[0_4px_12px_rgba(16,185,129,0.2)]'
+                        : type === 'Non-Veg'
+                          ? 'bg-[#ef4444]/20 text-[#ef4444] shadow-[0_4px_12px_rgba(239,68,68,0.2)]'
+                          : 'bg-white/10 text-white shadow-[0_4px_12px_rgba(255,255,255,0.1)]'
+                      : 'text-text-secondary hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {type === 'Veg' && <div className={`w-2 h-2 rounded-full ${dietFilter === 'Veg' ? 'bg-[#10b981]' : 'bg-transparent border border-text-secondary'}`} />}
+                  {type === 'Non-Veg' && <div className={`w-2 h-2 rounded-full ${dietFilter === 'Non-Veg' ? 'bg-[#ef4444]' : 'bg-transparent border border-text-secondary'}`} />}
+                  {type === 'All' && <div className={`w-2 h-2 rounded-full ${dietFilter === 'All' ? 'bg-white' : 'bg-transparent border border-text-secondary'}`} />}
+                  {type}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="w-full bg-bg-secondary border border-border-primary rounded-3xl p-8 shadow-xl">
@@ -232,7 +263,26 @@ const CookNow = () => {
               </p>
             </div>
 
-            <div className="w-full md:w-72">
+            <div className="flex flex-col gap-4 w-full md:w-auto md:min-w-[300px]">
+              <div className="flex bg-[#171717] p-1 rounded-xl border border-white/5 shadow-md">
+                 {['All', 'Veg', 'Non-Veg'].map(type => (
+                  <button
+                    key={type}
+                    onClick={() => { setDietFilter(type); }}
+                    className={`flex-1 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 text-center ${
+                      dietFilter === type 
+                        ? type === 'Veg' 
+                          ? 'bg-[#10b981]/20 text-[#10b981]'
+                          : type === 'Non-Veg'
+                            ? 'bg-[#ef4444]/20 text-[#ef4444]'
+                            : 'bg-white/10 text-white'
+                        : 'text-text-secondary hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Search size={18} className="text-text-secondary" />
