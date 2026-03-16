@@ -44,14 +44,14 @@ const Collections = () => {
           <div>
             <button 
               onClick={() => navigate('/')}
-              className="group flex items-center gap-3 px-5 py-2.5 bg-bg-secondary/80 backdrop-blur-md border border-border-primary rounded-full font-medium text-sm text-text-secondary transition-all duration-300 hover:text-text-primary hover:border-accent hover:shadow-[0_0_20px_rgba(37,116,120,0.3)] hover:-translate-x-1 mb-4"
+              className="group flex items-center gap-3 px-5 py-2.5 bg-[#171717]/80 backdrop-blur-md border border-white/10 rounded-full font-medium text-sm text-text-secondary transition-all duration-300 hover:text-white hover:border-accent hover:shadow-[0_0_20px_rgba(37,116,120,0.3)] hover:-translate-x-1 mb-4"
             >
-              <div className="flex items-center justify-center w-7 h-7 rounded-full bg-bg-primary group-hover:bg-accent transition-colors duration-300">
+              <div className="flex items-center justify-center w-7 h-7 rounded-full bg-white/5 group-hover:bg-accent transition-colors duration-300">
                 <ArrowLeft size={16} className="text-text-secondary group-hover:text-white transition-colors duration-300" />
               </div>
               <span className="font-medium">Back to Dashboard</span>
             </button>
-            <h1 className="text-4xl md:text-5xl font-bold flex items-center gap-4 text-text-primary">
+            <h1 className="text-4xl md:text-5xl font-bold flex items-center gap-4">
               {isFavorites ? (
                 <Heart size={40} className="text-red-500" fill="currentColor" />
               ) : (
@@ -65,11 +65,11 @@ const Collections = () => {
           </div>
 
           <div className="flex flex-col gap-4">
-            <div className="flex bg-bg-secondary p-1 rounded-2xl border border-border-primary shadow-md self-start md:self-end">
+            <div className="flex bg-[#171717] p-1 rounded-2xl border border-white/5 shadow-md self-start md:self-end">
               <button
                 onClick={() => navigate('/saved')}
                 className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2 ${
-                  !isFavorites ? 'bg-accent text-white shadow-lg' : 'text-text-secondary hover:text-text-primary hover:bg-bg-primary'
+                  !isFavorites ? 'bg-accent text-white shadow-lg' : 'text-text-secondary hover:text-white'
                 }`}
               >
                 <Bookmark size={16} fill={!isFavorites ? "currentColor" : "none"} />
@@ -78,7 +78,7 @@ const Collections = () => {
               <button
                 onClick={() => navigate('/favorites')}
                 className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 flex items-center gap-2 ${
-                  isFavorites ? 'bg-red-500 text-white shadow-lg' : 'text-text-secondary hover:text-text-primary hover:bg-bg-primary'
+                  isFavorites ? 'bg-red-500 text-white shadow-lg' : 'text-text-secondary hover:text-white'
                 }`}
               >
                 <Heart size={16} fill={isFavorites ? "currentColor" : "none"} />
@@ -87,18 +87,18 @@ const Collections = () => {
             </div>
 
             {/* Diet Filter with Counts */}
-            <div className="flex bg-bg-secondary p-1 rounded-xl border border-border-primary shadow-md w-full md:w-auto">
+            <div className="flex bg-[#171717] p-1 rounded-xl border border-white/5 shadow-md w-full md:w-auto">
               {['All', 'Veg', 'Non-Veg'].map(type => (
                 <button
                   key={type}
                   onClick={() => setDietFilter(type)}
                   className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 text-center flex items-center justify-center gap-2 min-w-[80px] ${dietFilter === type
-                      ? type === 'Veg' ? 'bg-[#10b981]/20 text-[#10b981]' : type === 'Non-Veg' ? 'bg-[#ef4444]/20 text-[#ef4444]' : 'bg-bg-primary text-text-primary border border-border-primary shadow-inner'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-bg-primary'
+                      ? type === 'Veg' ? 'bg-[#10b981]/20 text-[#10b981]' : type === 'Non-Veg' ? 'bg-[#ef4444]/20 text-[#ef4444]' : 'bg-white/10 text-white'
+                      : 'text-text-secondary hover:text-white hover:bg-white/5'
                     }`}
                 >
                   {type}
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${dietFilter === type ? 'bg-accent/10 border border-accent/20' : 'bg-bg-primary border border-border-primary'}`}>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${dietFilter === type ? 'bg-white/10' : 'bg-white/5 border border-white/5'}`}>
                     {dietCounts[type]}
                   </span>
                 </button>
@@ -113,7 +113,7 @@ const Collections = () => {
             {collectionItems.map((recipe) => (
               <div 
                 key={recipe._id || recipe.id}
-                className="flex flex-col bg-bg-secondary/40 border border-border-primary rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:border-accent/30 group relative shadow-sm hover:shadow-xl"
+                className="flex flex-col bg-[#171717]/40 border border-white/5 rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:border-white/10 group relative"
               >
                 {/* Image Area */}
                 <div className="relative h-56 overflow-hidden">
@@ -123,10 +123,10 @@ const Collections = () => {
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     onError={(e) => { 
                       e.target.src = 'https://res.cloudinary.com/dw4j19xmz/image/upload/v1773396970/Remove_background_project_3_new_nyocqk.png';
-                      e.target.classList.add('p-10', 'object-contain', 'bg-bg-secondary'); 
+                      e.target.classList.add('p-10', 'object-contain', 'bg-[#1a1a1a]'); 
                     }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-bg-primary/80 via-transparent to-transparent opacity-60"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent opacity-60"></div>
                   
                   {/* Diet Badge (Top Right) */}
                   <div className="absolute top-4 right-4 z-10">
@@ -162,28 +162,28 @@ const Collections = () => {
                 {/* Content Area */}
                 <div className="p-6 flex flex-col flex-1">
                   <div className="flex justify-between items-start mb-3">
-                    <h3 className="text-lg font-bold text-text-primary line-clamp-2 leading-tight group-hover:text-accent transition-colors">
+                    <h3 className="text-lg font-bold text-white line-clamp-2 leading-tight group-hover:text-accent transition-colors">
                       {recipe.title}
                     </h3>
                   </div>
 
                   <div className="flex items-center gap-4 text-text-secondary text-xs mb-6">
-                    <span className="flex items-center gap-1.5 bg-bg-primary px-2 py-1 rounded-md border border-border-primary">
+                    <span className="flex items-center gap-1.5 bg-white/5 px-2 py-1 rounded-md">
                       <Clock size={14} /> {recipe.prep_time || '15m'}
                     </span>
-                    <span className="flex items-center gap-1.5 bg-bg-primary px-2 py-1 rounded-md border border-border-primary">
+                    <span className="flex items-center gap-1.5 bg-white/5 px-2 py-1 rounded-md">
                       <ChefHat size={14} /> {recipe.cuisine || 'Global'}
                     </span>
                   </div>
 
-                  <div className="mt-auto flex items-center justify-between pt-4 border-t border-border-primary">
+                  <div className="mt-auto flex items-center justify-between pt-4 border-t border-white/5">
                     <div className="flex items-center gap-2">
                       <button 
                         onClick={() => toggleFavorite(recipe._id || recipe.id)}
                         className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
                           favoriteRecipes.includes(recipe._id || recipe.id) 
-                            ? 'bg-red-500/10 text-red-500 border border-red-500/20 shadow-sm' 
-                            : 'bg-bg-primary text-text-secondary border border-border-primary hover:bg-red-500/10 hover:text-red-500'
+                            ? 'bg-red-500/10 text-red-500 border border-red-500/20' 
+                            : 'bg-white/5 text-text-secondary border border-white/5 hover:bg-red-500/10 hover:text-red-500'
                         }`}
                         title="Favorite"
                       >
@@ -193,8 +193,8 @@ const Collections = () => {
                         onClick={() => toggleSaved(recipe._id || recipe.id)}
                         className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
                           savedRecipes.includes(recipe._id || recipe.id) 
-                            ? 'bg-accent/10 text-accent border border-accent/20 shadow-sm' 
-                            : 'bg-bg-primary text-text-secondary border border-border-primary hover:bg-accent/10 hover:text-accent'
+                            ? 'bg-accent/10 text-accent border border-accent/20' 
+                            : 'bg-white/5 text-text-secondary border border-white/5 hover:bg-accent/10 hover:text-accent'
                         }`}
                         title="Save"
                       >
@@ -214,8 +214,8 @@ const Collections = () => {
           </div>
         ) : (
           /* Empty State */
-          <div className="py-32 flex flex-col items-center justify-center bg-bg-secondary/20 border border-dashed border-border-primary rounded-[4rem] text-center px-6 shadow-inner">
-            <div className="w-24 h-24 bg-bg-secondary border border-border-primary rounded-full flex items-center justify-center mb-8 shadow-sm">
+          <div className="py-32 flex flex-col items-center justify-center bg-[#171717]/20 border border-dashed border-white/10 rounded-[4rem] text-center px-6">
+            <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-8">
               {isFavorites ? (
                 <Heart size={48} className="text-text-secondary opacity-20" />
               ) : (

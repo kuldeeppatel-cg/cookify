@@ -25,7 +25,7 @@ export const RecipeProvider = ({ children }) => {
   // Fetch user data from backend on mount or when user changes
   useEffect(() => {
     if (userId) {
-      fetch(`https://cookify-pou0.onrender.com/api/users/${userId}`)
+      fetch(`http://localhost:5000/api/users/${userId}`)
         .then(res => res.json())
         .then(data => {
           if (data) {
@@ -58,7 +58,7 @@ export const RecipeProvider = ({ children }) => {
       
       // Sync with backend
       if (userId) {
-        fetch(`https://cookify-pou0.onrender.com/api/users/${userId}/save-recipe`, {
+        fetch(`http://localhost:5000/api/users/${userId}/save-recipe`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ recipeId: id })
@@ -76,7 +76,7 @@ export const RecipeProvider = ({ children }) => {
 
       // Sync with backend
       if (userId) {
-        fetch(`https://cookify-pou0.onrender.com/api/users/${userId}/favorite-recipe`, {
+        fetch(`http://localhost:5000/api/users/${userId}/favorite-recipe`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ recipeId: id })
@@ -102,7 +102,7 @@ export const RecipeProvider = ({ children }) => {
     if (userId && recentRecipes.length >= 0) {
       // Small debounce or simple check to avoid unnecessary hits
       const timer = setTimeout(() => {
-        fetch(`https://cookify-pou0.onrender.com/api/users/${userId}/recent-recipes`, {
+        fetch(`http://localhost:5000/api/users/${userId}/recent-recipes`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ recentRecipes })

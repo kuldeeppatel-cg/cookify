@@ -17,10 +17,10 @@ const Dashboard = () => {
   return (
     <div className="pt-24 min-h-screen flex flex-col max-w-[1200px] mx-auto px-6 pb-20">
       {/* Hero Welcome */}
-      <div className="mb-10 py-12 px-8 bg-gradient-to-br from-bg-secondary to-bg-primary border border-border-primary rounded-[2.5rem] relative overflow-hidden group shadow-xl">
+      <div className="mb-10 py-12 px-8 bg-gradient-to-br from-[#171717] to-[#0a0a0a] border border-white/5 rounded-[2.5rem] relative overflow-hidden group">
         <div className="absolute -right-20 -top-20 w-80 h-80 bg-accent/5 rounded-full blur-[100px] group-hover:bg-accent/10 transition-colors duration-700"></div>
         <div className="relative z-10">
-          <h1 className="text-4xl md:text-5xl font-bold mb-3 tracking-tight text-text-primary">Welcome back, <span className="text-accent">{username}!</span></h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-3 tracking-tight">Welcome back, <span className="text-accent">{username}!</span></h1>
           <p className="text-text-secondary text-lg max-w-xl leading-relaxed">Your personal kitchen assistant is ready. What are we cooking today?</p>
         </div>
       </div>
@@ -45,12 +45,12 @@ const Dashboard = () => {
         
         <div 
           onClick={() => navigate('/cook-now')}
-          className="p-8 bg-bg-secondary border border-border-primary rounded-[2rem] flex flex-col justify-center cursor-pointer group hover:border-accent/30 transition-all shadow-md"
+          className="p-8 bg-[#171717] border border-white/5 rounded-[2rem] flex flex-col justify-center cursor-pointer group hover:border-white/10 transition-all"
         >
-          <div className="mb-4 w-12 h-12 bg-bg-primary border border-border-primary rounded-xl flex items-center justify-center group-hover:bg-accent/20 group-hover:text-accent transition-colors">
+          <div className="mb-4 w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center group-hover:bg-accent/20 group-hover:text-accent transition-colors">
             <Utensils size={24} />
           </div>
-          <h3 className="font-bold mb-1 text-text-primary">Cook Now</h3>
+          <h3 className="font-bold mb-1">Cook Now</h3>
           <p className="text-text-secondary text-xs">Find recipes by ingredients.</p>
         </div>
       </div>
@@ -70,7 +70,7 @@ const Dashboard = () => {
               <div 
                 key={index}
                 onClick={() => navigate(`/recipe/${recipe._id || recipe.id}`)}
-                className="group cursor-pointer bg-bg-secondary/40 border border-border-primary rounded-3xl overflow-hidden hover:border-accent/30 transition-all shadow-sm hover:shadow-lg"
+                className="group cursor-pointer bg-[#171717]/40 border border-white/5 rounded-3xl overflow-hidden hover:border-white/10 transition-all"
               >
                 <div className="relative h-40 overflow-hidden">
                   <img 
@@ -79,10 +79,10 @@ const Dashboard = () => {
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     onError={(e) => { 
                       e.target.src = 'https://res.cloudinary.com/dw4j19xmz/image/upload/v1773396970/Remove_background_project_3_new_nyocqk.png';
-                      e.target.classList.add('p-6', 'object-contain', 'bg-bg-secondary'); 
+                      e.target.classList.add('p-6', 'object-contain', 'bg-[#1a1a1a]'); 
                     }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-bg-primary/80 to-transparent opacity-60"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] to-transparent opacity-60"></div>
                   
                   {/* Diet Badge (Top Right) */}
                   <div className="absolute top-3 right-3 z-10">
@@ -108,9 +108,9 @@ const Dashboard = () => {
             ))}
           </div>
         ) : (
-          <div className="py-20 text-center bg-bg-secondary/20 border border-dashed border-border-primary rounded-[3rem]">
+          <div className="py-20 text-center bg-[#171717]/20 border border-dashed border-white/10 rounded-[3rem]">
             <Utensils size={48} className="mx-auto text-text-secondary opacity-20 mb-4" />
-            <h3 className="text-lg font-bold mb-2 text-text-primary">No history yet</h3>
+            <h3 className="text-lg font-bold mb-2">No history yet</h3>
             <p className="text-text-secondary text-sm mb-8">Start your culinary journey by finding a recipe.</p>
             <button
               onClick={() => navigate('/cook-now')}

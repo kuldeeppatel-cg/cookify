@@ -76,16 +76,16 @@ const RecipeDetail = () => {
           className="w-full h-full object-cover"
           onError={(e) => { 
             e.target.src = 'https://res.cloudinary.com/dw4j19xmz/image/upload/v1773396970/Remove_background_project_3_new_nyocqk.png';
-            e.target.classList.add('p-20', 'object-contain', 'bg-bg-secondary');
+            e.target.classList.add('p-20', 'object-contain', 'bg-[#0a0a0a]');
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-bg-primary via-bg-primary/40 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-bg-primary via-bg-primary/20 to-transparent"></div>
         
         {/* Floating Actions */}
         <div className="absolute top-8 left-6 md:left-12 z-20 flex items-center gap-3">
           <button 
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 px-4 py-2 bg-bg-secondary/60 backdrop-blur-md border border-border-primary rounded-full text-text-primary hover:bg-accent hover:text-white transition-all duration-300 group"
+            className="flex items-center gap-2 px-4 py-2 bg-black/40 backdrop-blur-md border border-white/10 rounded-full text-white hover:bg-accent transition-all duration-300 group"
           >
             <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
             <span className="font-medium text-sm">Back</span>
@@ -98,7 +98,7 @@ const RecipeDetail = () => {
             className={`flex items-center justify-center w-11 h-11 rounded-full backdrop-blur-md border transition-all duration-300 ${
               favoriteRecipes.includes(recipe._id || recipe.id) 
                 ? 'bg-red-500 border-red-500 text-white shadow-lg' 
-                : 'bg-bg-secondary/60 border-border-primary text-text-primary hover:bg-red-500/40 hover:border-red-500 hover:text-white'
+                : 'bg-black/40 border-white/20 text-white hover:bg-red-500/40 hover:border-red-500'
             }`}
           >
             <Heart size={20} fill={favoriteRecipes.includes(recipe._id || recipe.id) ? "currentColor" : "none"} />
@@ -108,7 +108,7 @@ const RecipeDetail = () => {
             className={`flex items-center justify-center w-11 h-11 rounded-full backdrop-blur-md border transition-all duration-300 ${
               savedRecipes.includes(recipe._id || recipe.id) 
                 ? 'bg-accent border-accent text-white shadow-lg' 
-                : 'bg-bg-secondary/60 border-border-primary text-text-primary hover:bg-accent/40 hover:border-accent hover:text-white'
+                : 'bg-black/40 border-white/20 text-white hover:bg-accent/40 hover:border-accent'
             }`}
           >
             <Bookmark size={20} fill={savedRecipes.includes(recipe._id || recipe.id) ? "currentColor" : "none"} />
@@ -131,7 +131,7 @@ const RecipeDetail = () => {
               </span>
             )}
           </div>
-          <h1 className="text-4xl md:text-6xl font-black text-text-primary mb-4 leading-tight drop-shadow-sm">
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 leading-tight drop-shadow-2xl">
             {recipe.title}
           </h1>
         </div>
@@ -144,28 +144,28 @@ const RecipeDetail = () => {
           <div className="lg:col-span-5 space-y-8">
             {/* Quick Stats */}
             <div className="grid grid-cols-3 gap-4">
-              <div className="bg-bg-secondary p-4 rounded-2xl border border-border-primary text-center group hover:border-accent/30 transition-colors shadow-sm">
+              <div className="bg-bg-secondary p-4 rounded-2xl border border-border-primary text-center group hover:border-accent/30 transition-colors">
                 <Clock className="mx-auto mb-2 text-text-secondary group-hover:text-accent transition-colors" size={20} />
                 <p className="text-[10px] uppercase text-text-secondary font-bold tracking-widest mb-1">Prep</p>
-                <p className="text-text-primary font-bold">{recipe.prep_time || '15m'}</p>
+                <p className="text-white font-bold">{recipe.prep_time || '15m'}</p>
               </div>
-              <div className="bg-bg-secondary p-4 rounded-2xl border border-border-primary text-center group hover:border-accent/30 transition-colors shadow-sm">
+              <div className="bg-bg-secondary p-4 rounded-2xl border border-border-primary text-center group hover:border-accent/30 transition-colors">
                 <Timer className="mx-auto mb-2 text-text-secondary group-hover:text-accent transition-colors" size={20} />
                 <p className="text-[10px] uppercase text-text-secondary font-bold tracking-widest mb-1">Cook</p>
-                <p className="text-text-primary font-bold">{recipe.cook_time || '25m'}</p>
+                <p className="text-white font-bold">{recipe.cook_time || '25m'}</p>
               </div>
-              <div className="bg-bg-secondary p-4 rounded-2xl border border-border-primary text-center group hover:border-accent/30 transition-colors shadow-sm">
+              <div className="bg-bg-secondary p-4 rounded-2xl border border-border-primary text-center group hover:border-accent/30 transition-colors">
                 <ChefHat className="mx-auto mb-2 text-text-secondary group-hover:text-accent transition-colors" size={20} />
                 <p className="text-[10px] uppercase text-text-secondary font-bold tracking-widest mb-1">Level</p>
-                <p className="text-text-primary font-bold">Medium</p>
+                <p className="text-white font-bold">Medium</p>
               </div>
             </div>
 
             {/* Ingredients Card */}
             <div className="bg-bg-secondary rounded-3xl border border-border-primary overflow-hidden shadow-xl">
-              <div className="p-6 border-b border-border-primary bg-bg-primary/50 flex items-center gap-3">
+              <div className="p-6 border-b border-border-primary bg-white/5 flex items-center gap-3">
                 <Utensils className="text-accent" size={20} />
-                <h2 className="text-xl font-bold text-text-primary">Ingredients</h2>
+                <h2 className="text-xl font-bold">Ingredients</h2>
               </div>
               <div className="p-6 space-y-6">
                 
@@ -229,10 +229,10 @@ const RecipeDetail = () => {
           {/* Right Column: Instructions */}
           <div className="lg:col-span-7">
             <div className="bg-bg-secondary rounded-3xl border border-border-primary overflow-hidden shadow-xl h-full">
-              <div className="p-6 border-b border-border-primary bg-bg-primary/50 flex items-center justify-between">
+              <div className="p-6 border-b border-border-primary bg-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <ChefHat className="text-accent" size={20} />
-                  <h2 className="text-xl font-bold text-text-primary">Step-by-Step Instructions</h2>
+                  <h2 className="text-xl font-bold">Step-by-Step Instructions</h2>
                 </div>
                 {recipe.instructions && (
                   <span className="text-xs text-text-secondary font-medium px-3 py-1 bg-white/5 rounded-full border border-white/5">
@@ -255,7 +255,7 @@ const RecipeDetail = () => {
                       )}
 
                       <div className="pt-0.5">
-                        <p className="text-text-primary text-base md:text-lg leading-relaxed antialiased">
+                        <p className="text-white text-base md:text-lg leading-relaxed antialiased">
                           {step}
                         </p>
                       </div>

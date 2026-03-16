@@ -36,14 +36,14 @@ const MyRecipes = () => {
           <div className="animate-in slide-in-from-left duration-700">
             <button 
               onClick={() => navigate('/')}
-              className="group flex items-center gap-2 text-text-secondary hover:text-text-primary transition-all mb-6"
+              className="group flex items-center gap-2 text-text-secondary hover:text-white transition-all mb-6"
             >
-              <div className="w-8 h-8 rounded-full bg-bg-secondary flex items-center justify-center group-hover:bg-accent group-hover:text-white transition-colors border border-border-primary">
+              <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-accent transition-colors">
                 <ArrowLeft size={16} />
               </div>
               <span className="text-sm font-bold uppercase tracking-widest">Back to Home</span>
             </button>
-            <h1 className="text-4xl md:text-5xl font-bold flex items-center gap-4 text-text-primary">
+            <h1 className="text-4xl md:text-5xl font-bold flex items-center gap-4">
               <ChefHat size={40} className="text-accent" />
               My Recipes
             </h1>
@@ -67,7 +67,7 @@ const MyRecipes = () => {
             {myRecipes.map((recipe) => (
               <div 
                 key={recipe._id || recipe.id}
-                className="flex flex-col bg-bg-secondary/40 border border-border-primary rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:border-accent/30 group relative shadow-sm hover:shadow-xl"
+                className="flex flex-col bg-[#171717]/40 border border-white/5 rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:border-white/10 group relative"
               >
                 {/* Image Area */}
                 <div className="relative h-56 overflow-hidden">
@@ -77,10 +77,10 @@ const MyRecipes = () => {
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     onError={(e) => { 
                       e.target.src = 'https://res.cloudinary.com/dw4j19xmz/image/upload/v1773396970/Remove_background_project_3_new_nyocqk.png';
-                      e.target.classList.add('p-10', 'object-contain', 'bg-bg-secondary'); 
+                      e.target.classList.add('p-10', 'object-contain', 'bg-[#1a1a1a]'); 
                     }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-bg-primary/80 via-transparent to-transparent opacity-60"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent opacity-60"></div>
                   
                   {/* Diet Badge */}
                   <div className="absolute top-4 right-4 z-10">
@@ -124,21 +124,21 @@ const MyRecipes = () => {
                 {/* Content Area */}
                 <div className="p-6 flex flex-col flex-1">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-bold line-clamp-1 group-hover:text-accent transition-colors duration-300 text-text-primary">{recipe.title}</h3>
+                    <h3 className="text-xl font-bold line-clamp-1 group-hover:text-accent transition-colors duration-300">{recipe.title}</h3>
                   </div>
                   
                   <div className="flex items-center gap-4 text-text-secondary text-xs mb-6 font-medium">
-                    <div className="flex items-center gap-1.5 bg-bg-primary px-2 py-1 rounded-md border border-border-primary">
+                    <div className="flex items-center gap-1.5">
                       <Clock size={14} className="text-accent" />
                       {recipe.prep_time || '15m'}
                     </div>
-                    <div className="flex items-center gap-1.5 bg-bg-primary px-2 py-1 rounded-md border border-border-primary">
+                    <div className="flex items-center gap-1.5">
                       <MessageSquare size={14} className="text-accent" />
                       {recipe.cuisine || 'Fusion'}
                     </div>
                   </div>
 
-                  <div className="mt-auto pt-6 border-t border-border-primary flex items-center justify-between">
+                  <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <button 
                         onClick={() => toggleFavorite(recipe._id || recipe.id)}
@@ -155,7 +155,7 @@ const MyRecipes = () => {
                         className={`p-2.5 rounded-xl transition-all duration-300 ${
                           savedRecipes.includes(recipe._id || recipe.id) 
                             ? 'bg-accent/10 text-accent shadow-[0_0_15px_rgba(37,116,120,0.2)]' 
-                            : 'bg-bg-primary text-text-secondary border border-border-primary hover:text-accent hover:bg-accent/10'
+                            : 'bg-white/5 text-text-secondary hover:text-accent hover:bg-accent/5'
                         }`}
                       >
                         <Bookmark size={18} fill={savedRecipes.includes(recipe._id || recipe.id) ? "currentColor" : "none"} />
@@ -176,7 +176,7 @@ const MyRecipes = () => {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-32 text-center animate-in fade-in duration-1000">
-            <div className="w-24 h-24 bg-bg-secondary rounded-[2rem] flex items-center justify-center text-text-secondary/20 mb-8 border border-border-primary shadow-sm">
+            <div className="w-24 h-24 bg-white/5 rounded-[2rem] flex items-center justify-center text-white/10 mb-8 border border-white/5">
               <ChefHat size={48} />
             </div>
             <h2 className="text-3xl font-bold mb-4">No Shared Recipes Yet</h2>
@@ -195,15 +195,15 @@ const MyRecipes = () => {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-bg-secondary border border-border-primary rounded-[3rem] p-10 max-w-md w-full shadow-2xl animate-in zoom-in duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-[#171717] border border-white/10 rounded-[3rem] p-10 max-w-md w-full shadow-2xl animate-in zoom-in duration-300">
             <div className="flex justify-between items-start mb-6">
               <div className="w-14 h-14 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-500">
                 <AlertCircle size={32} />
               </div>
               <button 
                 onClick={() => setDeleteConfirm(null)}
-                className="p-2 hover:bg-bg-primary rounded-full transition-colors text-text-secondary hover:text-text-primary"
+                className="p-2 hover:bg-white/5 rounded-full transition-colors"
               >
                 <X size={24} />
               </button>
@@ -224,7 +224,7 @@ const MyRecipes = () => {
               </button>
               <button 
                 onClick={() => setDeleteConfirm(null)}
-                className="w-full py-4 bg-bg-primary text-text-primary rounded-2xl font-bold border border-border-primary hover:bg-bg-secondary transition-all"
+                className="w-full py-4 bg-white/5 text-white rounded-2xl font-bold hover:bg-white/10 transition-all"
               >
                 Cancel
               </button>

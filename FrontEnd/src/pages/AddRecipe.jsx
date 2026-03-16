@@ -133,8 +133,8 @@ const AddRecipe = () => {
               ? 'Your changes have been saved successfully. Redirecting...' 
               : 'Your culinary masterpiece has been shared with the world. Redirecting...'}
           </p>
-          <div className="w-full bg-bg-primary border border-border-primary h-1.5 rounded-full overflow-hidden shadow-inner">
-            <div className="bg-accent h-full animate-[progress_2s_linear] shadow-[0_0_10px_rgba(37,116,120,0.5)]"></div>
+          <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+            <div className="bg-accent h-full animate-[progress_2s_linear]"></div>
           </div>
         </div>
       </div>
@@ -146,21 +146,21 @@ const AddRecipe = () => {
       <div className="max-w-4xl mx-auto">
         <button 
           onClick={() => navigate(-1)}
-          className="group flex items-center gap-3 px-5 py-2.5 bg-bg-secondary/80 backdrop-blur-md border border-border-primary rounded-full font-medium text-sm text-text-secondary transition-all duration-300 hover:text-text-primary hover:border-accent hover:shadow-[0_0_20px_rgba(37,116,120,0.3)] hover:-translate-x-1 mb-10 shadow-lg"
+          className="group flex items-center gap-3 px-5 py-2.5 bg-[#171717]/80 backdrop-blur-md border border-white/10 rounded-full font-medium text-sm text-text-secondary transition-all duration-300 hover:text-white hover:border-accent hover:shadow-[0_0_20px_rgba(37,116,120,0.3)] hover:-translate-x-1 mb-10"
         >
-          <div className="flex items-center justify-center w-7 h-7 rounded-full bg-bg-primary group-hover:bg-accent transition-colors duration-300">
+          <div className="flex items-center justify-center w-7 h-7 rounded-full bg-white/5 group-hover:bg-accent transition-colors duration-300">
             <ArrowLeft size={16} className="text-text-secondary group-hover:text-white transition-colors duration-300" />
           </div>
           <span>Cancel & Go Back</span>
         </button>
 
-        <div className="bg-bg-secondary/40 backdrop-blur-md border border-border-primary rounded-[3rem] overflow-hidden shadow-2xl">
-          <div className="p-8 md:p-12 border-b border-border-primary bg-gradient-to-r from-accent/5 to-transparent">
+        <div className="bg-[#171717]/40 backdrop-blur-md border border-white/5 rounded-[3rem] overflow-hidden shadow-2xl">
+          <div className="p-8 md:p-12 border-b border-white/5 bg-gradient-to-r from-accent/5 to-transparent">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 bg-accent/20 rounded-2xl flex items-center justify-center text-accent">
                 {isEditing ? <Edit3 size={28} /> : <ChefHat size={28} />}
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-text-primary">{isEditing ? 'Edit Your Recipe' : 'Share Your Recipe'}</h1>
+              <h1 className="text-3xl md:text-4xl font-bold">{isEditing ? 'Edit Your Recipe' : 'Share Your Recipe'}</h1>
             </div>
             <p className="text-text-secondary">
               {isEditing ? 'Make changes to your recipe details below.' : 'Fill in the details below to add your secret recipe to Cookify.'}
@@ -172,7 +172,7 @@ const AddRecipe = () => {
             
             {/* Basic Info */}
             <div className="space-y-8">
-              <div className="flex items-center gap-3 text-text-primary font-bold opacity-60">
+              <div className="flex items-center gap-3 text-white font-bold opacity-60">
                 <Info size={18} />
                 <h2 className="uppercase text-xs tracking-widest">Basic Information</h2>
               </div>
@@ -187,7 +187,7 @@ const AddRecipe = () => {
                     value={formData.title}
                     onChange={handleChange}
                     placeholder="e.g. Grandma's Special Pasta"
-                    className="w-full bg-bg-primary border border-border-primary rounded-2xl px-6 py-4 text-text-primary placeholder:text-text-secondary/30 focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all shadow-inner"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder:text-white/20 focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all"
                   />
                 </div>
 
@@ -197,10 +197,10 @@ const AddRecipe = () => {
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    className="w-full bg-bg-primary border border-border-primary rounded-2xl px-6 py-4 text-text-primary focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all appearance-none cursor-pointer shadow-inner"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all appearance-none cursor-pointer"
                   >
-                    <option value="Veg" className="bg-bg-secondary text-text-primary">Vegetarian</option>
-                    <option value="Non-Veg" className="bg-bg-secondary text-text-primary">Non-Vegetarian</option>
+                    <option value="Veg" className="bg-[#1a1a1a]">Vegetarian</option>
+                    <option value="Non-Veg" className="bg-[#1a1a1a]">Non-Vegetarian</option>
                   </select>
                 </div>
 
@@ -213,7 +213,7 @@ const AddRecipe = () => {
                     value={formData.cuisine}
                     onChange={handleChange}
                     placeholder="e.g. Italian, Indian, Mexican"
-                    className="w-full bg-bg-primary border border-border-primary rounded-2xl px-6 py-4 text-text-primary placeholder:text-text-secondary/30 focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all shadow-inner"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white placeholder:text-white/20 focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all"
                   />
                 </div>
 
@@ -227,9 +227,9 @@ const AddRecipe = () => {
                       value={formData.image_url}
                       onChange={handleChange}
                       placeholder="https://..."
-                      className="w-full bg-bg-primary border border-border-primary rounded-2xl pl-14 pr-6 py-4 text-text-primary placeholder:text-text-secondary/30 focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all shadow-inner"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl pl-14 pr-6 py-4 text-white placeholder:text-white/20 focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all"
                     />
-                    <ImageIcon className="absolute left-6 top-1/2 -translate-y-1/2 text-text-secondary/30" size={20} />
+                    <ImageIcon className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" size={20} />
                   </div>
                 </div>
               </div>
@@ -245,9 +245,9 @@ const AddRecipe = () => {
                       value={formData.prep_time}
                       onChange={handleChange}
                       placeholder="e.g. 15m"
-                      className="w-full bg-bg-primary border border-border-primary rounded-2xl pl-14 pr-6 py-4 text-text-primary placeholder:text-text-secondary/30 focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all shadow-inner"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl pl-14 pr-6 py-4 text-white placeholder:text-white/20 focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all"
                     />
-                    <Clock className="absolute left-6 top-1/2 -translate-y-1/2 text-text-secondary/30" size={20} />
+                    <Clock className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" size={20} />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -260,9 +260,9 @@ const AddRecipe = () => {
                       value={formData.cook_time}
                       onChange={handleChange}
                       placeholder="e.g. 30m"
-                      className="w-full bg-bg-primary border border-border-primary rounded-2xl pl-14 pr-6 py-4 text-text-primary placeholder:text-text-secondary/30 focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all shadow-inner"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl pl-14 pr-6 py-4 text-white placeholder:text-white/20 focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-all"
                     />
-                    <Utensils className="absolute left-6 top-1/2 -translate-y-1/2 text-text-secondary/30" size={20} />
+                    <Utensils className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" size={20} />
                   </div>
                 </div>
               </div>
@@ -270,7 +270,7 @@ const AddRecipe = () => {
 
             {/* Ingredients Section */}
             <div className="space-y-8">
-              <div className="flex items-center gap-3 text-text-primary font-bold opacity-60">
+              <div className="flex items-center gap-3 text-white font-bold opacity-60">
                 <Utensils size={18} />
                 <h2 className="uppercase text-xs tracking-widest">Ingredients Breakdown</h2>
               </div>
@@ -296,7 +296,7 @@ const AddRecipe = () => {
                         type="text" 
                         value={v}
                         onChange={(e) => handleArrayChange(i, e.target.value, 'vegetables')}
-                        className="w-full bg-bg-primary border border-border-primary rounded-xl px-4 py-3 text-sm text-text-primary focus:border-[#10b981] outline-none shadow-sm"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[#10b981] outline-none"
                       />
                       {formData.vegetables.length > 1 && (
                         <button 
@@ -333,12 +333,12 @@ const AddRecipe = () => {
                         type="text" 
                         value={f}
                         onChange={(e) => handleArrayChange(i, e.target.value, 'flour')}
-                        className="w-full bg-bg-primary border border-border-primary rounded-xl px-4 py-3 text-sm text-text-primary focus:border-[#f59e0b] outline-none shadow-sm"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-[#f59e0b] outline-none"
                       />
                       {formData.flour.length > 1 && (
                         <button 
                           type="button" 
-                          onClick={() => removeArrayField(i, 'flour')}
+                          onClick={() => removeArrayField(index, 'flour')}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           <Trash2 size={16} />
@@ -370,7 +370,7 @@ const AddRecipe = () => {
                         type="text" 
                         value={ing}
                         onChange={(e) => handleArrayChange(i, e.target.value, 'ingredients')}
-                        className="w-full bg-bg-primary border border-border-primary rounded-xl px-4 py-3 text-sm text-text-primary focus:border-accent outline-none shadow-sm"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-accent outline-none"
                       />
                       {formData.ingredients.length > 1 && (
                         <button 
@@ -389,7 +389,7 @@ const AddRecipe = () => {
 
             {/* Instructions */}
             <div className="space-y-8">
-              <div className="flex items-center gap-3 text-text-primary font-bold opacity-60">
+              <div className="flex items-center gap-3 text-white font-bold opacity-60">
                 <BookOpen size={18} />
                 <h2 className="uppercase text-xs tracking-widest">Cooking Steps * (Min 2)</h2>
               </div>
@@ -406,7 +406,7 @@ const AddRecipe = () => {
                         value={step}
                         onChange={(e) => handleArrayChange(i, e.target.value, 'instructions')}
                         placeholder="Describe this step..."
-                        className="w-full bg-bg-primary border border-border-primary rounded-2xl px-6 py-4 text-text-primary focus:border-accent outline-none transition-all resize-none shadow-sm"
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:border-accent outline-none transition-all resize-none"
                       />
                       {formData.instructions.length > 1 && (
                         <button 
@@ -423,7 +423,7 @@ const AddRecipe = () => {
                 <button 
                   type="button" 
                   onClick={() => addArrayField('instructions')}
-                  className="w-full py-4 border border-dashed border-border-primary rounded-2xl text-text-secondary hover:text-accent hover:border-accent transition-all flex items-center justify-center gap-2 bg-bg-primary/30"
+                  className="w-full py-4 border border-dashed border-white/10 rounded-2xl text-text-secondary hover:text-white hover:border-white/30 transition-all flex items-center justify-center gap-2"
                 >
                   <Plus size={20} /> Add Next Step
                 </button>

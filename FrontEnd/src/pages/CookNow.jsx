@@ -218,7 +218,7 @@ const CookNow = () => {
     return (
       <div className="min-h-screen pt-32 pb-12 px-6 flex flex-col items-center justify-center">
         <div className="w-28 h-28 md:w-36 md:h-36 mb-6 relative">
-          <video autoPlay loop muted playsInline className={`absolute inset-0 w-full h-full object-contain ${localStorage.getItem('theme') === 'light' ? 'mix-blend-multiply' : 'mix-blend-screen'}`}>
+          <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-contain mix-blend-screen">
             <source src="https://res.cloudinary.com/dw4j19xmz/video/upload/v1773475402/Remove_background_project_4_aia7d1.mp4" type="video/mp4" />
           </video>
         </div>
@@ -246,9 +246,9 @@ const CookNow = () => {
           <div className="w-full flex justify-start mb-8 -ml-4 lg:-ml-12">
             <button
               onClick={() => navigate('/')}
-              className="group flex items-center gap-3 px-5 py-2.5 bg-bg-secondary/80 backdrop-blur-md border border-border-primary rounded-full font-medium text-sm text-text-secondary transition-all duration-300 hover:text-text-primary hover:border-accent hover:shadow-[0_0_20px_rgba(37,116,120,0.3)] hover:-translate-x-1"
+              className="group flex items-center gap-3 px-5 py-2.5 bg-[#171717]/80 backdrop-blur-md border border-white/10 rounded-full font-medium text-sm text-text-secondary transition-all duration-300 hover:text-white hover:border-accent hover:shadow-[0_0_20px_rgba(37,116,120,0.3)] hover:-translate-x-1"
             >
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-bg-primary group-hover:bg-accent transition-colors duration-300">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 group-hover:bg-accent transition-colors duration-300">
                 <ArrowLeft size={16} className="text-text-secondary group-hover:text-white transition-colors duration-300" />
               </div>
               <span className="tracking-wide">Dashboard</span>
@@ -256,7 +256,7 @@ const CookNow = () => {
           </div>
           
           <div className="mb-10 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-text-primary to-text-secondary bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-[#f8fafc] to-[#94a3b8] bg-clip-text text-transparent">
               What's in your kitchen?
             </h1>
             <p className="text-text-secondary text-lg max-w-2xl mx-auto">
@@ -298,9 +298,9 @@ const CookNow = () => {
             <div className="mb-8">
               <div className="flex p-1.5 bg-bg-primary/50 backdrop-blur-md rounded-2xl border border-border-primary overflow-x-auto custom-scrollbar mb-6 gap-2">
                 {[
-                  { id: 'vegetables', label: 'Vegetables', icon: Carrot, count: selectedVegetables.length, activeStyle: 'bg-[#10b981] text-white shadow-[0_4px_12px_rgba(16,185,129,0.3)]', defaultStyle: 'text-text-secondary hover:bg-bg-primary hover:text-text-primary' },
-                  { id: 'flour', label: 'Flour & Grains', icon: Wheat, count: selectedFlour.length, activeStyle: 'bg-[#f59e0b] text-white shadow-[0_4px_12px_rgba(245,158,11,0.3)]', defaultStyle: 'text-text-secondary hover:bg-bg-primary hover:text-text-primary' },
-                  { id: 'ingredients', label: 'Other Extras', icon: ShoppingBag, count: selectedIngredients.length, activeStyle: 'bg-accent text-white shadow-[0_4px_12px_rgba(37,116,120,0.3)]', defaultStyle: 'text-text-secondary hover:bg-bg-primary hover:text-text-primary' }
+                  { id: 'vegetables', label: 'Vegetables', icon: Carrot, count: selectedVegetables.length, activeStyle: 'bg-[#10b981] text-white shadow-[0_4px_12px_rgba(16,185,129,0.3)]', defaultStyle: 'text-text-secondary hover:bg-white/5 hover:text-white' },
+                  { id: 'flour', label: 'Flour & Grains', icon: Wheat, count: selectedFlour.length, activeStyle: 'bg-[#f59e0b] text-white shadow-[0_4px_12px_rgba(245,158,11,0.3)]', defaultStyle: 'text-text-secondary hover:bg-white/5 hover:text-white' },
+                  { id: 'ingredients', label: 'Other Extras', icon: ShoppingBag, count: selectedIngredients.length, activeStyle: 'bg-accent text-white shadow-[0_4px_12px_rgba(37,116,120,0.3)]', defaultStyle: 'text-text-secondary hover:bg-white/5 hover:text-white' }
                 ].map((tab) => {
                   const Icon = tab.icon;
                   return (
@@ -340,7 +340,7 @@ const CookNow = () => {
                       else if (activeTab === 'flour') setFlourSearchQuery(e.target.value);
                       else setIngredientSearchQuery(e.target.value);
                     }}
-                    className="w-full pl-12 pr-12 py-3.5 bg-bg-secondary/80 backdrop-blur border border-border-primary rounded-2xl text-text-primary text-base transition-all duration-200 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(37,116,120,0.1)]"
+                    className="w-full pl-12 pr-12 py-3.5 bg-bg-secondary/80 backdrop-blur border border-border-primary rounded-2xl text-text-primary text-base transition-all duration-200 focus:outline-none focus:border-white/30 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.05)]"
                   />
                   {(activeTab === 'vegetables' ? vegetableSearchQuery : activeTab === 'flour' ? flourSearchQuery : ingredientSearchQuery) && (
                     <button
@@ -349,7 +349,7 @@ const CookNow = () => {
                         else if (activeTab === 'flour') setFlourSearchQuery('');
                         else setIngredientSearchQuery('');
                       }}
-                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-text-secondary hover:text-text-primary transition-colors"
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-text-secondary hover:text-white transition-colors"
                     >
                       <X size={18} />
                     </button>
@@ -371,7 +371,7 @@ const CookNow = () => {
                           onClick={() => toggleVegetable(item)}
                           className={`px-4 py-2 md:px-5 md:py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border ${selectedVegetables.includes(item)
                               ? 'bg-[#10b981] border-[#10b981] text-white shadow-[0_4px_15px_rgba(16,185,129,0.4)] md:-translate-y-0.5'
-                              : 'bg-bg-secondary border-border-primary text-text-secondary hover:border-accent hover:text-text-primary hover:bg-bg-primary'
+                              : 'bg-bg-secondary border-border-primary text-text-secondary hover:border-white/40 hover:text-white hover:bg-bg-primary'
                             }`}
                         >
                           {item}
@@ -394,7 +394,7 @@ const CookNow = () => {
                           onClick={() => toggleFlour(item)}
                           className={`px-4 py-2 md:px-5 md:py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border ${selectedFlour.includes(item)
                               ? 'bg-[#f59e0b] border-[#f59e0b] text-white shadow-[0_4px_15px_rgba(245,158,11,0.4)] md:-translate-y-0.5'
-                              : 'bg-bg-secondary border-border-primary text-text-secondary hover:border-[#f59e0b]/40 hover:text-text-primary hover:bg-bg-primary'
+                              : 'bg-bg-secondary border-border-primary text-text-secondary hover:border-white/40 hover:text-white hover:bg-bg-primary'
                             }`}
                         >
                           {item}
@@ -417,7 +417,7 @@ const CookNow = () => {
                           onClick={() => toggleIngredient(item)}
                           className={`px-4 py-2 md:px-5 md:py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border ${selectedIngredients.includes(item)
                               ? 'bg-accent border-accent text-white shadow-[0_4px_15px_rgba(37,116,120,0.4)] md:-translate-y-0.5'
-                              : 'bg-bg-secondary border-border-primary text-text-secondary hover:border-accent/40 hover:text-text-primary hover:bg-bg-primary'
+                              : 'bg-bg-secondary border-border-primary text-text-secondary hover:border-white/40 hover:text-white hover:bg-bg-primary'
                             }`}
                         >
                           {item}
@@ -443,7 +443,7 @@ const CookNow = () => {
                 className={`w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-bold text-lg transition-all duration-200 ${
                   totalSelectedCount > 0 && filteredRecipes.length > 0
                     ? 'bg-accent text-white hover:bg-accent-hover hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(37,116,120,0.4)]'
-                    : 'bg-bg-secondary border border-border-primary text-text-secondary cursor-not-allowed'
+                    : 'bg-white/5 border border-white/10 text-text-secondary cursor-not-allowed'
                 }`}
               >
                 {totalSelectedCount === 0 ? 'Select Items' : filteredRecipes.length === 0 ? 'No Matches' : `Find Recipes (${filteredRecipes.length})`}
@@ -464,7 +464,7 @@ const CookNow = () => {
           <div className="flex flex-wrap items-center gap-3 mb-6">
             <button
               onClick={() => navigate('/')}
-              className="group flex items-center gap-2 px-4 py-2 bg-bg-secondary border border-border-primary rounded-full font-medium text-xs md:text-sm text-text-secondary transition-all duration-300 hover:text-text-primary hover:border-accent hover:shadow-[0_0_15px_rgba(37,116,120,0.2)] hover:-translate-x-0.5"
+              className="group flex items-center gap-2 px-4 py-2 bg-bg-secondary border border-border-primary rounded-full font-medium text-xs md:text-sm text-text-secondary transition-all duration-300 hover:text-white hover:border-accent hover:shadow-[0_0_15px_rgba(37,116,120,0.2)] hover:-translate-x-0.5"
             >
               <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
               Dashboard
@@ -478,9 +478,9 @@ const CookNow = () => {
               Edit Ingredients
             </button>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-2 text-text-primary">Your Recipe Matches</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">Your Recipe Matches</h1>
           <p className="text-text-secondary text-lg max-w-2xl" title={[...selectedIngredients, ...selectedVegetables, ...selectedFlour].join(', ')}>
-            Based on: <span className="text-text-primary font-semibold">
+            Based on: <span className="text-white font-medium">
               {totalSelectedCount > 0 
                 ? (totalSelectedCount > 6 ? `${[...selectedIngredients, ...selectedVegetables, ...selectedFlour].slice(0, 6).join(', ')}...` : [...selectedIngredients, ...selectedVegetables, ...selectedFlour].join(', ')) 
                 : 'All items'}
@@ -489,18 +489,18 @@ const CookNow = () => {
         </div>
 
         <div className="flex flex-col gap-4 w-full md:w-auto md:min-w-[300px]">
-          <div className="flex bg-bg-secondary p-1 rounded-xl border border-border-primary shadow-md">
+          <div className="flex bg-[#171717] p-1 rounded-xl border border-white/5 shadow-md">
             {['All', 'Veg', 'Non-Veg'].map(type => (
               <button
                 key={type}
                 onClick={() => setDietFilter(type)}
                 className={`flex-1 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 text-center flex items-center justify-center gap-2 ${dietFilter === type
-                    ? type === 'Veg' ? 'bg-[#10b981]/20 text-[#10b981]' : type === 'Non-Veg' ? 'bg-[#ef4444]/20 text-[#ef4444]' : 'bg-bg-primary text-text-primary border border-border-primary shadow-sm'
-                    : 'text-text-secondary hover:text-text-primary hover:bg-bg-primary'
+                    ? type === 'Veg' ? 'bg-[#10b981]/20 text-[#10b981]' : type === 'Non-Veg' ? 'bg-[#ef4444]/20 text-[#ef4444]' : 'bg-white/10 text-white'
+                    : 'text-text-secondary hover:text-white hover:bg-white/5'
                   }`}
               >
                 {type}
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${dietFilter === type ? 'bg-accent/10 border border-accent/20' : 'bg-bg-primary border border-border-primary'}`}>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${dietFilter === type ? 'bg-white/10' : 'bg-white/5 border border-white/5'}`}>
                   {dietCounts[type]}
                 </span>
               </button>
@@ -546,7 +546,7 @@ const CookNow = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredRecipes.map((recipe, index) => (
-            <div key={recipe.id || index} className="flex flex-col bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:border-accent/30 group shadow-sm">
+            <div key={recipe.id || index} className="flex flex-col bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.5)] hover:border-white/10 group">
               <div className="relative h-48 overflow-hidden bg-[#222]">
                 <img
                   src={recipe.image_url || 'https://res.cloudinary.com/dw4j19xmz/image/upload/v1773396970/Remove_background_project_3_new_nyocqk.png'}
@@ -554,7 +554,7 @@ const CookNow = () => {
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   onError={(e) => { 
                     e.target.src = 'https://res.cloudinary.com/dw4j19xmz/image/upload/v1773396970/Remove_background_project_3_new_nyocqk.png';
-                    e.target.classList.add('p-8', 'object-contain', 'bg-bg-secondary'); 
+                    e.target.classList.add('p-8', 'object-contain', 'bg-[#1a1a1a]'); 
                   }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-bg-secondary via-transparent to-transparent opacity-80"></div>
@@ -594,7 +594,7 @@ const CookNow = () => {
                       className={`w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md border transition-all duration-300 ${
                         favoriteRecipes.includes(recipe._id || recipe.id) 
                           ? 'bg-red-500 border-red-500 text-white shadow-lg' 
-                          : 'bg-bg-secondary/40 border-border-primary text-text-primary hover:bg-red-500/40 hover:border-red-500 hover:text-white'
+                          : 'bg-black/40 border-white/20 text-white hover:bg-red-500/40 hover:border-red-500'
                       }`}
                     >
                       <Heart size={16} fill={favoriteRecipes.includes(recipe._id || recipe.id) ? "currentColor" : "none"} />
@@ -604,7 +604,7 @@ const CookNow = () => {
                       className={`w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md border transition-all duration-300 ${
                         savedRecipes.includes(recipe._id || recipe.id) 
                           ? 'bg-accent border-accent text-white shadow-lg' 
-                          : 'bg-bg-secondary/40 border-border-primary text-text-primary hover:bg-accent/40 hover:border-accent hover:text-white'
+                          : 'bg-black/40 border-white/20 text-white hover:bg-accent/40 hover:border-accent'
                       }`}
                     >
                       <Bookmark size={16} fill={savedRecipes.includes(recipe._id || recipe.id) ? "currentColor" : "none"} />
@@ -613,7 +613,7 @@ const CookNow = () => {
                 </div>
               </div>
               <div className="p-5 flex flex-col flex-1">
-                <h3 className="text-lg font-bold text-text-primary mb-2 line-clamp-2">{recipe.title}</h3>
+                <h3 className="text-lg font-bold text-white mb-2 line-clamp-2">{recipe.title}</h3>
                 {totalSelectedCount > 0 && recipe.matchPercentage > 0 && (
                   <div className="mb-4">
                     <div className="flex items-center justify-between text-xs mb-1.5">
@@ -626,7 +626,7 @@ const CookNow = () => {
                   </div>
                 )}
                 <p className="text-sm text-text-secondary mb-4 my-auto">
-                  <span className="font-semibold text-text-primary mb-1 block">Includes:</span>
+                  <span className="font-semibold text-[#f8fafc] mb-1 block">Includes:</span>
                   {[...(recipe.ingredients || []), ...(recipe.vegetables || []), ...(recipe.flour || [])]
                     .map(i => typeof i === 'string' ? i : '')
                     .filter(i => i !== '')
@@ -643,7 +643,7 @@ const CookNow = () => {
                     addRecent(recipe);
                     navigate(`/recipe/${recipe._id || recipe.id}`);
                   }}
-                  className="w-full mt-auto py-3 rounded-xl font-semibold text-sm transition-all duration-200 bg-bg-primary border border-border-primary text-text-primary group-hover:bg-accent group-hover:border-accent group-hover:text-white"
+                  className="w-full mt-auto py-3 rounded-xl font-semibold text-sm transition-all duration-200 bg-white/5 border border-white/10 text-white group-hover:bg-accent group-hover:border-accent"
                 >
                   View Recipe
                 </button>

@@ -1,47 +1,16 @@
 @import "tailwindcss";
 
-:root {
-  --font-sans: 'Outfit', sans-serif;
-
-  /* Default Dark Theme */
-  --bg-primary: #0a0a0a;
-  --bg-secondary: #171717;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --accent: #257478;
-  --accent-hover: #1b5d61;
-  --border-primary: #334155;
-  --error: #ef4444;
-}
-
-:root.light {
-  /* "Soft Pearl & Slate" - Premium Nordic Light Theme */
-  --bg-primary: #f9fafb;
-  /* Neutral-warm gray (cleanest eye-friendly white) */
-  --bg-secondary: #ffffff;
-  /* Pure white for cards & elevation */
-  --text-primary: #111827;
-  /* Slate 900 (High legibility, soft feel) */
-  --text-secondary: #4b5563;
-  /* Slate 600 */
-  --accent: #217d82;
-  /* Refined Brand Teal */
-  --accent-hover: #1b5d61;
-  --border-primary: #e5e7eb;
-  /* Slate 200 (Cleanest dividers) */
-}
-
 @theme {
-  --font-sans: var(--font-sans);
-
-  --color-bg-primary: var(--bg-primary);
-  --color-bg-secondary: var(--bg-secondary);
-  --color-text-primary: var(--text-primary);
-  --color-text-secondary: var(--text-secondary);
-  --color-accent: var(--accent);
-  --color-accent-hover: var(--accent-hover);
-  --color-border-primary: var(--border-primary);
-  --color-error: var(--error);
+  --font-sans: 'Outfit', sans-serif;
+  
+  --color-bg-primary: #0a0a0a;
+  --color-bg-secondary: #171717;
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #94a3b8;
+  --color-accent: #257478; /* Primary teal derived from logo */
+  --color-accent-hover: #1b5d61; /* Darker teal on hover */
+  --color-border-primary: #334155;
+  --color-error: #ef4444;
 }
 
 body {
@@ -49,45 +18,23 @@ body {
   background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
   -webkit-font-smoothing: antialiased;
-  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Custom Scrollbar styled for logo accent */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
-
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--color-bg-secondary);
+  border-radius: 8px;
 }
-
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: var(--color-border-primary);
-  border-radius: 10px;
-  transition: background-color 0.3s;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: var(--color-accent);
+  border-radius: 8px;
+  border: 2px solid var(--color-bg-secondary);
 }
-
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-border-primary) transparent;
-}
-
-/* Global focus styles */
-input:focus,
-select:focus,
-textarea:focus {
-  outline: none;
-  border-color: var(--color-accent) !important;
-  box-shadow: 0 0 0 3px rgba(37, 116, 120, 0.1);
-}
-
-/* Base selection color */
-::selection {
-  background: var(--color-accent);
-  color: white;
+  scrollbar-color: var(--color-accent) var(--color-bg-secondary);
 }
