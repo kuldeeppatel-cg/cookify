@@ -11,21 +11,29 @@ import {
   Timer,
   Carrot,
   Wheat,
-  ShoppingBasket
+  ShoppingBasket,
+  Heart,
+  Bookmark
 } from 'lucide-react';
 
 const RecipeDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { recipes, loading } = useRecipeContext();
+  const { 
+    recipes, loading, 
+    savedRecipes, toggleSaved, 
+    favoriteRecipes, toggleFavorite,
+    addRecent 
+  } = useRecipeContext();
   const [recipe, setRecipe] = useState(null);
 
   useEffect(() => {
     if (recipes && id) {
       const found = recipes.find(r => (r._id || r.id).toString() === id);
       setRecipe(found);
+      if (found) addRecent(found);
     }
-  }, [recipes, id]);
+  }, [recipes, id, addRecent]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -73,14 +81,37 @@ const RecipeDetail = () => {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-bg-primary via-bg-primary/20 to-transparent"></div>
         
-        {/* Floating Back Button */}
-        <div className="absolute top-8 left-6 md:left-12 z-20">
+        {/* Floating Actions */}
+        <div className="absolute top-8 left-6 md:left-12 z-20 flex items-center gap-3">
           <button 
             onClick={() => navigate(-1)}
             className="flex items-center gap-2 px-4 py-2 bg-black/40 backdrop-blur-md border border-white/10 rounded-full text-white hover:bg-accent transition-all duration-300 group"
           >
             <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
             <span className="font-medium text-sm">Back</span>
+          </button>
+        </div>
+
+        <div className="absolute top-8 right-6 md:right-12 z-20 flex items-center gap-3">
+          <button 
+            onClick={() => toggleFavorite(recipe._id || recipe.id)}
+            className={`flex items-center justify-center w-11 h-11 rounded-full backdrop-blur-md border transition-all duration-300 ${
+              favoriteRecipes.includes(recipe._id || recipe.id) 
+                ? 'bg-red-500 border-red-500 text-white shadow-lg' 
+                : 'bg-black/40 border-white/20 text-white hover:bg-red-500/40 hover:border-red-500'
+            }`}
+          >
+            <Heart size={20} fill={favoriteRecipes.includes(recipe._id || recipe.id) ? "currentColor" : "none"} />
+          </button>
+          <button 
+            onClick={() => toggleSaved(recipe._id || recipe.id)}
+            className={`flex items-center justify-center w-11 h-11 rounded-full backdrop-blur-md border transition-all duration-300 ${
+              savedRecipes.includes(recipe._id || recipe.id) 
+                ? 'bg-accent border-accent text-white shadow-lg' 
+                : 'bg-black/40 border-white/20 text-white hover:bg-accent/40 hover:border-accent'
+            }`}
+          >
+            <Bookmark size={20} fill={savedRecipes.includes(recipe._id || recipe.id) ? "currentColor" : "none"} />
           </button>
         </div>
 

@@ -1,7 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecipeContext } from '../context/RecipeContext';
-import { Loader2, ChefHat, Search, ArrowRight, ArrowLeft, Clock, X, Carrot, Wheat, ShoppingBag } from 'lucide-react';
+import { 
+  Loader2, ChefHat, Search, ArrowRight, ArrowLeft, Clock, X, Carrot, Wheat, ShoppingBag, 
+  Heart, Bookmark 
+} from 'lucide-react';
 
 const cleanIngredientName = (ing) => {
   let text = ing.split(',')[0].toLowerCase();
@@ -41,7 +44,10 @@ const CookNow = () => {
     selectedIngredients, setSelectedIngredients,
     selectedVegetables, setSelectedVegetables,
     selectedFlour, setSelectedFlour,
-    dietFilter, setDietFilter
+    dietFilter, setDietFilter,
+    savedRecipes, toggleSaved,
+    favoriteRecipes, toggleFavorite,
+    addRecent
   } = useRecipeContext();
 
   const [ingredientSearchQuery, setIngredientSearchQuery] = useState('');
@@ -235,7 +241,7 @@ const CookNow = () => {
   // STEP 1: Ingredient Selection UI
   if (!hasSearched) {
     return (
-      <div key="selection-step" className="min-h-screen pt-32 pb-12 px-6 max-w-[1200px] mx-auto animate-in fade-in duration-500">
+      <div key="selection-step" className="min-h-screen pt-32 md:pt-40 pb-12 px-6 max-w-[1200px] mx-auto animate-in fade-in duration-500">
         <div className="max-w-3xl mx-auto flex flex-col items-center relative">
           <div className="w-full flex justify-start mb-8 -ml-4 lg:-ml-12">
             <button
@@ -452,7 +458,7 @@ const CookNow = () => {
 
   // STEP 2: Recipe Results UI
   return (
-    <div key="results-step" className="min-h-screen pt-32 pb-12 px-6 max-w-[1200px] mx-auto animate-in fade-in duration-500">
+    <div key="results-step" className="min-h-screen pt-32 md:pt-44 pb-12 px-6 max-w-[1200px] mx-auto animate-in fade-in duration-500">
       <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <div className="flex flex-wrap items-center gap-3 mb-6">
@@ -579,6 +585,32 @@ const CookNow = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Save/Favorite Buttons (Bottom) */}
+                <div className="absolute bottom-4 left-4 right-4 z-10 flex items-center justify-between opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); toggleFavorite(recipe._id || recipe.id); }}
+                      className={`w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md border transition-all duration-300 ${
+                        favoriteRecipes.includes(recipe._id || recipe.id) 
+                          ? 'bg-red-500 border-red-500 text-white shadow-lg' 
+                          : 'bg-black/40 border-white/20 text-white hover:bg-red-500/40 hover:border-red-500'
+                      }`}
+                    >
+                      <Heart size={16} fill={favoriteRecipes.includes(recipe._id || recipe.id) ? "currentColor" : "none"} />
+                    </button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); toggleSaved(recipe._id || recipe.id); }}
+                      className={`w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md border transition-all duration-300 ${
+                        savedRecipes.includes(recipe._id || recipe.id) 
+                          ? 'bg-accent border-accent text-white shadow-lg' 
+                          : 'bg-black/40 border-white/20 text-white hover:bg-accent/40 hover:border-accent'
+                      }`}
+                    >
+                      <Bookmark size={16} fill={savedRecipes.includes(recipe._id || recipe.id) ? "currentColor" : "none"} />
+                    </button>
+                  </div>
+                </div>
               </div>
               <div className="p-5 flex flex-col flex-1">
                 <h3 className="text-lg font-bold text-white mb-2 line-clamp-2">{recipe.title}</h3>
@@ -607,7 +639,10 @@ const CookNow = () => {
                   </div>
                 )}
                 <button 
-                  onClick={() => navigate(`/recipe/${recipe._id || recipe.id}`)}
+                  onClick={() => {
+                    addRecent(recipe);
+                    navigate(`/recipe/${recipe._id || recipe.id}`);
+                  }}
                   className="w-full mt-auto py-3 rounded-xl font-semibold text-sm transition-all duration-200 bg-white/5 border border-white/10 text-white group-hover:bg-accent group-hover:border-accent"
                 >
                   View Recipe
