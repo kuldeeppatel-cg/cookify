@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
 
 const Login = () => {
-  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [formData, setFormData] = useState({ identifier: '', password: '' });
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -18,20 +18,30 @@ const Login = () => {
     setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const storedUsers = JSON.parse(localStorage.getItem('cookify_users')) || [];
-    
-    const userExists = storedUsers.find(
-      (user) => user.username === formData.username && user.password === formData.password
-    );
+    try {
+      const response = await fetch('http://localhost:5000/api/users/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          identifier: formData.identifier,
+          password: formData.password
+        })
+      });
 
-    if (userExists) {
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+
       localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('currentUser', formData.username);
+      localStorage.setItem('currentUser', data.user.username);
+      localStorage.setItem('currentUserId', data.user._id);
       navigate('/');
-    } else {
-      setError('Invalid username or password');
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -49,14 +59,14 @@ const Login = () => {
               {error && <div className="text-error text-sm mb-4 p-3 bg-red-500/10 border-l-4 border-error rounded">{error}</div>}
               
               <div className="mb-6">
-                <label className="block text-sm font-medium text-text-primary mb-2" htmlFor="username">Username</label>
+                <label className="block text-sm font-medium text-text-primary mb-2" htmlFor="identifier">Email or Username</label>
                 <input
                   type="text"
-                  id="username"
-                  name="username"
+                  id="identifier"
+                  name="identifier"
                   className="w-full px-4 py-3 bg-bg-secondary border border-border-primary rounded-xl text-text-primary text-base transition-all duration-200 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(37,116,120,0.2)]"
-                  placeholder="Enter your username"
-                  value={formData.username}
+                  placeholder="Enter your email or username"
+                  value={formData.identifier}
                   onChange={handleChange}
                   required
                 />

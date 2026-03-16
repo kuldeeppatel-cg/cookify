@@ -25,6 +25,36 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* Quick Actions - Specifically for Add Recipe */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div 
+          onClick={() => navigate('/add-recipe')}
+          className="md:col-span-2 p-8 bg-accent/10 border border-accent/20 rounded-[2rem] flex items-center justify-between cursor-pointer group hover:bg-accent/20 transition-all shadow-lg hover:shadow-accent/5"
+        >
+          <div className="flex items-center gap-6">
+            <div className="w-16 h-16 bg-accent text-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+              <Plus size={32} />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold mb-1">Share Your Recipe</h3>
+              <p className="text-text-secondary text-sm">Add your own culinary masterpiece to your collection.</p>
+            </div>
+          </div>
+          <ArrowRight className="text-accent opacity-0 group-hover:opacity-100 transition-all -translate-x-4 group-hover:translate-x-0" />
+        </div>
+        
+        <div 
+          onClick={() => navigate('/cook-now')}
+          className="p-8 bg-[#171717] border border-white/5 rounded-[2rem] flex flex-col justify-center cursor-pointer group hover:border-white/10 transition-all"
+        >
+          <div className="mb-4 w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center group-hover:bg-accent/20 group-hover:text-accent transition-colors">
+            <Utensils size={24} />
+          </div>
+          <h3 className="font-bold mb-1">Cook Now</h3>
+          <p className="text-text-secondary text-xs">Find recipes by ingredients.</p>
+        </div>
+      </div>
+
       {/* Recently Viewed Section */}
       <div className="mb-12">
         <div className="flex items-center justify-between mb-8">
@@ -32,14 +62,6 @@ const Dashboard = () => {
             <Clock size={24} className="text-accent" />
             Recently Viewed
           </h2>
-          {recentRecipes.length > 0 && (
-            <button 
-              onClick={() => navigate('/cook-now')}
-              className="text-sm font-semibold text-accent flex items-center gap-1 hover:gap-2 transition-all"
-            >
-              Explore More <ArrowRight size={16} />
-            </button>
-          )}
         </div>
 
         {recentRecipes.length > 0 ? (

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { UserPlus } from 'lucide-react';
 
 const Signup = () => {
-  const [formData, setFormData] = useState({ username: '', password: '', confirmPassword: '' });
+  const [formData, setFormData] = useState({ username: '', email: '', password: '', confirmPassword: '' });
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -18,7 +18,7 @@ const Signup = () => {
     setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
@@ -31,20 +31,31 @@ const Signup = () => {
       return;
     }
 
-    const storedUsers = JSON.parse(localStorage.getItem('cookify_users')) || [];
-    
-    if (storedUsers.some(user => user.username === formData.username)) {
-      setError('Username already exists');
-      return;
-    }
+    try {
+      const response = await fetch('http://localhost:5000/api/users/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password
+        })
+      });
 
-    storedUsers.push({ username: formData.username, password: formData.password });
-    localStorage.setItem('cookify_users', JSON.stringify(storedUsers));
-    
-    // Auto login
-    localStorage.setItem('isAuthenticated', 'true');
-    localStorage.setItem('currentUser', formData.username);
-    navigate('/');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed');
+      }
+
+      // Auto login
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('currentUser', data.user.username);
+      localStorage.setItem('currentUserId', data.user._id);
+      navigate('/');
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
@@ -69,6 +80,20 @@ const Signup = () => {
                   className="w-full px-4 py-3 bg-bg-secondary border border-border-primary rounded-xl text-text-primary text-base transition-all duration-200 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(37,116,120,0.2)]"
                   placeholder="Choose a username"
                   value={formData.username}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-text-primary mb-2" htmlFor="email">Email</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  className="w-full px-4 py-3 bg-bg-secondary border border-border-primary rounded-xl text-text-primary text-base transition-all duration-200 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_rgba(37,116,120,0.2)]"
+                  placeholder="Enter your email"
+                  value={formData.email}
                   onChange={handleChange}
                   required
                 />

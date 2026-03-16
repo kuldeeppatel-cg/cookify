@@ -78,12 +78,30 @@ const AddRecipe = () => {
     setError(null);
 
     // Clean data: remove empty strings from arrays
+    const cleanedIngredients = formData.ingredients.filter(i => i.trim() !== '');
+    const cleanedInstructions = formData.instructions.filter(ins => ins.trim() !== '');
+    const cleanedVegetables = formData.vegetables.filter(v => v.trim() !== '');
+    const cleanedFlour = formData.flour.filter(f => f.trim() !== '');
+
+    // Validation
+    if (cleanedIngredients.length < 1) {
+      setError('Please add at least one ingredient');
+      setLoading(false);
+      return;
+    }
+
+    if (cleanedInstructions.length < 2) {
+      setError('Please add at least 2 cooking steps');
+      setLoading(false);
+      return;
+    }
+
     const cleanedData = {
       ...formData,
-      ingredients: formData.ingredients.filter(i => i.trim() !== ''),
-      vegetables: formData.vegetables.filter(v => v.trim() !== ''),
-      flour: formData.flour.filter(f => f.trim() !== ''),
-      instructions: formData.instructions.filter(ins => ins.trim() !== '')
+      ingredients: cleanedIngredients,
+      vegetables: cleanedVegetables,
+      flour: cleanedFlour,
+      instructions: cleanedInstructions
     };
 
     let result;
@@ -146,6 +164,7 @@ const AddRecipe = () => {
             </div>
             <p className="text-text-secondary">
               {isEditing ? 'Make changes to your recipe details below.' : 'Fill in the details below to add your secret recipe to Cookify.'}
+              <span className="block mt-2 text-xs text-accent italic font-medium">* Required fields must be completed. Vegetables and Flour & Grains are optional.</span>
             </p>
           </div>
 
@@ -186,8 +205,9 @@ const AddRecipe = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-text-secondary ml-1">Cuisine Type</label>
+                  <label className="text-sm font-medium text-text-secondary ml-1">Cuisine Type *</label>
                   <input 
+                    required
                     type="text" 
                     name="cuisine"
                     value={formData.cuisine}
@@ -198,9 +218,10 @@ const AddRecipe = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-text-secondary ml-1">Recipe Image URL (Optional)</label>
+                  <label className="text-sm font-medium text-text-secondary ml-1">Recipe Image URL *</label>
                   <div className="relative">
                     <input 
+                      required
                       type="url" 
                       name="image_url"
                       value={formData.image_url}
@@ -215,9 +236,10 @@ const AddRecipe = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-text-secondary ml-1">Prep Time</label>
+                  <label className="text-sm font-medium text-text-secondary ml-1">Prep Time *</label>
                   <div className="relative">
                     <input 
+                      required
                       type="text" 
                       name="prep_time"
                       value={formData.prep_time}
@@ -229,9 +251,10 @@ const AddRecipe = () => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-text-secondary ml-1">Cook Time</label>
+                  <label className="text-sm font-medium text-text-secondary ml-1">Cook Time *</label>
                   <div className="relative">
                     <input 
+                      required
                       type="text" 
                       name="cook_time"
                       value={formData.cook_time}
@@ -330,7 +353,7 @@ const AddRecipe = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <label className="flex items-center gap-2 text-sm font-bold text-accent">
-                    <ShoppingBasket size={16} /> Other Ingredients
+                    <ShoppingBasket size={16} /> Other Ingredients *
                   </label>
                   <button 
                     type="button" 
@@ -368,7 +391,7 @@ const AddRecipe = () => {
             <div className="space-y-8">
               <div className="flex items-center gap-3 text-white font-bold opacity-60">
                 <BookOpen size={18} />
-                <h2 className="uppercase text-xs tracking-widest">Cooking Steps</h2>
+                <h2 className="uppercase text-xs tracking-widest">Cooking Steps * (Min 2)</h2>
               </div>
 
               <div className="space-y-6">

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import useApi from '../hooks/useApi';
 
 const RecipeContext = createContext();
@@ -8,6 +8,7 @@ export const useRecipeContext = () => useContext(RecipeContext);
 export const RecipeProvider = ({ children }) => {
   const { data: recipes, loading, error, refetch } = useApi('http://localhost:3000/api/recipes');
   const user = localStorage.getItem('currentUser') || 'default';
+  const userId = localStorage.getItem('currentUserId');
   
   // Persistence state
   const [hasSearched, setHasSearched] = useState(false);
@@ -17,40 +18,101 @@ export const RecipeProvider = ({ children }) => {
   const [dietFilter, setDietFilter] = useState('All');
 
   // New features: Saved, Favorites, Recent
-  const [savedRecipes, setSavedRecipes] = useState(() => JSON.parse(localStorage.getItem(`saved_${user}`)) || []);
-  const [favoriteRecipes, setFavoriteRecipes] = useState(() => JSON.parse(localStorage.getItem(`fav_${user}`)) || []);
-  const [recentRecipes, setRecentRecipes] = useState(() => JSON.parse(localStorage.getItem(`recent_${user}`)) || []);
+  const [savedRecipes, setSavedRecipes] = useState([]);
+  const [favoriteRecipes, setFavoriteRecipes] = useState([]);
+  const [recentRecipes, setRecentRecipes] = useState([]);
 
+  // Fetch user data from backend on mount or when user changes
   useEffect(() => {
-    localStorage.setItem(`saved_${user}`, JSON.stringify(savedRecipes));
-  }, [savedRecipes, user]);
+    if (userId) {
+      fetch(`http://localhost:5000/api/users/${userId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data) {
+            setSavedRecipes(data.savedRecipes || []);
+            setFavoriteRecipes(data.favoriteRecipes || []);
+            setRecentRecipes(data.recentRecipes || []);
+          }
+        })
+        .catch(err => console.error('Failed to fetch user data:', err));
+    }
+  }, [userId]);
 
+  // Cleanup: Remove any recent recipes that are no longer in the main database
   useEffect(() => {
-    localStorage.setItem(`fav_${user}`, JSON.stringify(favoriteRecipes));
-  }, [favoriteRecipes, user]);
+    if (recipes && recipes.length > 0 && recentRecipes.length > 0) {
+      const recipeIds = new Set(recipes.map(r => (r._id || r.id)));
+      const filtered = recentRecipes.filter(r => recipeIds.has(r._id || r.id));
+      
+      // Only update if the content actually changed to avoid infinite loops
+      if (filtered.length !== recentRecipes.length) {
+        setRecentRecipes(filtered);
+      }
+    }
+  }, [recipes]); // Removed recentRecipes from dependencies to avoid loop
 
-  useEffect(() => {
-    localStorage.setItem(`recent_${user}`, JSON.stringify(recentRecipes));
-  }, [recentRecipes, user]);
+  const toggleSaved = useCallback(async (id) => {
+    setSavedRecipes(prev => {
+      const isSaved = prev.includes(id);
+      const newSaved = isSaved ? prev.filter(i => i !== id) : [...prev, id];
+      
+      // Sync with backend
+      if (userId) {
+        fetch(`http://localhost:5000/api/users/${userId}/save-recipe`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ recipeId: id })
+        }).catch(err => console.error('Failed to sync saved recipe:', err));
+      }
+      
+      return newSaved;
+    });
+  }, [userId]);
 
-  const toggleSaved = (id) => {
-    setSavedRecipes(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-  };
+  const toggleFavorite = useCallback((id) => {
+    setFavoriteRecipes(prev => {
+      const isFav = prev.includes(id);
+      const newFav = isFav ? prev.filter(i => i !== id) : [...prev, id];
 
-  const toggleFavorite = (id) => {
-    setFavoriteRecipes(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-  };
+      // Sync with backend
+      if (userId) {
+        fetch(`http://localhost:5000/api/users/${userId}/favorite-recipe`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ recipeId: id })
+        }).catch(err => console.error('Failed to sync favorite recipe:', err));
+      }
 
-  const addRecent = (recipe) => {
+      return newFav;
+    });
+  }, [userId]);
+
+  const addRecent = useCallback((recipe) => {
     if (!recipe) return;
     const id = (recipe._id || recipe.id);
     setRecentRecipes(prev => {
+      if (prev.length > 0 && (prev[0]._id || prev[0].id) === id) return prev;
       const filtered = prev.filter(r => (r._id || r.id) !== id);
-      return [recipe, ...filtered].slice(0, 8); // Keep last 8
+      return [recipe, ...filtered].slice(0, 4);
     });
-  };
+  }, []);
 
-  const addRecipe = async (recipeData) => {
+  // Effect to sync recentRecipes to the backend whenever it changes locally
+  useEffect(() => {
+    if (userId && recentRecipes.length >= 0) {
+      // Small debounce or simple check to avoid unnecessary hits
+      const timer = setTimeout(() => {
+        fetch(`http://localhost:5000/api/users/${userId}/recent-recipes`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ recentRecipes })
+        }).catch(err => console.error('Failed to sync recent recipes:', err));
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [recentRecipes, userId]);
+
+  const addRecipe = useCallback(async (recipeData) => {
     try {
       const response = await fetch('http://localhost:3000/api/recipes/bulk', {
         method: 'POST',
@@ -64,23 +126,29 @@ export const RecipeProvider = ({ children }) => {
       console.error(err);
       return { success: false, error: err.message };
     }
-  };
+  }, [user, refetch]);
 
-  const deleteRecipe = async (id) => {
+  const deleteRecipe = useCallback(async (id) => {
     try {
       const response = await fetch(`http://localhost:3000/api/recipes/${id}`, {
         method: 'DELETE'
       });
       if (!response.ok) throw new Error('Failed to delete recipe');
+      
+      // Cleanup local persistence states
+      setRecentRecipes(prev => prev.filter(r => (r._id || r.id) !== id));
+      setSavedRecipes(prev => prev.filter(savedId => savedId !== id));
+      setFavoriteRecipes(prev => prev.filter(favId => favId !== id));
+
       await refetch();
       return { success: true };
     } catch (err) {
       console.error(err);
       return { success: false, error: err.message };
     }
-  };
+  }, [refetch]);
 
-  const updateRecipe = async (id, recipeData) => {
+  const updateRecipe = useCallback(async (id, recipeData) => {
     try {
       const response = await fetch(`http://localhost:3000/api/recipes/${id}`, {
         method: 'PATCH',
@@ -94,7 +162,7 @@ export const RecipeProvider = ({ children }) => {
       console.error(err);
       return { success: false, error: err.message };
     }
-  };
+  }, [refetch]);
 
   return (
     <RecipeContext.Provider value={{ 
