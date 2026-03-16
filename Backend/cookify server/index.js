@@ -14,18 +14,34 @@ mongoose.connect('mongodb+srv://kuldeepp91791_db_user:tigershroff1@kuldeep.w7ro5
 
 // --- API ENDPOINTS ---
 const recipeSchema = new mongoose.Schema({
-  title: { 
-    type: String, 
-    required: true, 
-    unique: true, // Prevents duplicate titles at the DB level
-    trim: true 
+  title: {
+
+    type: String,
+
+    required: true,
+
+    unique: true,
+
+    trim: true
+
   },
+
   category: { type: String, enum: ['Veg', 'Non-Veg'], required: true },
+
   cuisine: String,
+
   image_url: String,
+
   prep_time: String,
+
   cook_time: String,
-  ingredients: [String],
+
+  ingredients: [String],   // KEPT
+
+  vegetables: [String],    // ADDED
+
+  flour: [String],
+
   instructions: [String]
 }, { timestamps: true });
 
@@ -63,12 +79,12 @@ app.post('/api/recipes/bulk', async (req, res) => {
     // Check if it's a bulk write error (duplicates)
     if (err.name === 'BulkWriteError' || err.code === 11000) {
       const insertedCount = err.result?.nInserted || 0;
-      
+
       // Use optional chaining (?.) to prevent the "undefined" error
       const duplicates = err.writeErrors?.map(e => ({
         index: e.index,
         // Safely access the title from the original request body using the index
-        title: req.body[e.index]?.title || "Unknown", 
+        title: req.body[e.index]?.title || "Unknown",
         error: "Duplicate title detected"
       })) || [];
 
@@ -88,8 +104,8 @@ app.post('/api/recipes/bulk', async (req, res) => {
 app.put('/api/recipes/:id', async (req, res) => {
   try {
     const updatedRecipe = await Recipe.findOneAndReplace(
-      { _id: req.params.id }, 
-      req.body, 
+      { _id: req.params.id },
+      req.body,
       { new: true, runValidators: true }
     );
     if (!updatedRecipe) return res.status(404).send('Recipe not found');
@@ -103,8 +119,8 @@ app.put('/api/recipes/:id', async (req, res) => {
 app.patch('/api/recipes/:id', async (req, res) => {
   try {
     const updatedRecipe = await Recipe.findByIdAndUpdate(
-      req.params.id, 
-      { $set: req.body }, 
+      req.params.id,
+      { $set: req.body },
       { new: true }
     );
     if (!updatedRecipe) return res.status(404).send('Recipe not found');
