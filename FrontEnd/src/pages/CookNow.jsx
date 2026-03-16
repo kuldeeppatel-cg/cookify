@@ -35,24 +35,31 @@ const parseTime = (timeStr) => {
 
 const CookNow = () => {
   const navigate = useNavigate();
-  const { recipes, loading, error } = useRecipeContext();
+  const { 
+    recipes, loading, error,
+    hasSearched, setHasSearched,
+    selectedIngredients, setSelectedIngredients,
+    selectedVegetables, setSelectedVegetables,
+    selectedFlour, setSelectedFlour,
+    dietFilter, setDietFilter
+  } = useRecipeContext();
 
-  const [selectedIngredients, setSelectedIngredients] = useState([]);
-  const [selectedVegetables, setSelectedVegetables] = useState([]);
-  const [selectedFlour, setSelectedFlour] = useState([]);
   const [ingredientSearchQuery, setIngredientSearchQuery] = useState('');
   const [vegetableSearchQuery, setVegetableSearchQuery] = useState('');
   const [flourSearchQuery, setFlourSearchQuery] = useState('');
-  const [hasSearched, setHasSearched] = useState(false);
   const [recipeSearchQuery, setRecipeSearchQuery] = useState('');
-  const [dietFilter, setDietFilter] = useState('All');
   const [activeTab, setActiveTab] = useState('vegetables');
 
   const totalSelectedCount = selectedIngredients.length + selectedVegetables.length + selectedFlour.length;
 
-  // Scroll to top whenever we switch between Step 1 and Step 2
+  // Only scroll to top when hasSearched changes FROM false TO true (user clicks search)
+  // We avoid scrolling to top when returning from a detail page (hasSearched stays true)
+  const prevHasSearched = React.useRef(hasSearched);
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (!prevHasSearched.current && hasSearched) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+    prevHasSearched.current = hasSearched;
   }, [hasSearched]);
 
   const getItemsSet = (recipes, filter, selected, path) => {
@@ -60,19 +67,39 @@ const CookNow = () => {
     const relevantRecipes = filter === 'All' ? recipes : recipes.filter(r => r?.category === filter);
     const itemsSet = new Set();
     relevantRecipes.forEach(recipe => {
+      const paths = ['ingredients', 'vegetables', 'flour'];
+      paths.forEach(p => {
+        const arr = recipe[p];
+        if (arr && Array.isArray(arr)) {
+          arr.forEach(ing => {
+            if (typeof ing === 'string') {
+              let cleanIng = cleanIngredientName(ing);
+              // Only collect ingredients that have meaningful content
+              if (cleanIng && cleanIng.length > 1) itemsSet.add(cleanIng);
+            }
+          });
+        }
+      });
+    });
+    // CRITICAL: Always include currently selected items so they don't disappear from the UI
+    selected.forEach(ing => itemsSet.add(ing));
+    // Filter the itemsSet for the specific path requested if still needed, 
+    // but the current UI calls this for each path separately.
+    // To fix the 'missing items' issue, we should ensure the selected tab only shows items found in that path.
+    const pathItems = new Set();
+    relevantRecipes.forEach(recipe => {
       const arr = recipe[path];
       if (arr && Array.isArray(arr)) {
         arr.forEach(ing => {
           if (typeof ing === 'string') {
             let cleanIng = cleanIngredientName(ing);
-            if (cleanIng && cleanIng.length > 2) itemsSet.add(cleanIng);
+            if (cleanIng && cleanIng.length > 1) pathItems.add(cleanIng);
           }
         });
       }
     });
-    // CRITICAL: Always include currently selected items so they don't disappear from the UI
-    selected.forEach(ing => itemsSet.add(ing));
-    return Array.from(itemsSet).sort();
+    selected.forEach(ing => pathItems.add(ing));
+    return Array.from(pathItems).sort();
   };
 
   const allIngredients = useMemo(() => getItemsSet(recipes, dietFilter, selectedIngredients, 'ingredients'), [recipes, dietFilter, selectedIngredients]);
@@ -109,7 +136,7 @@ const CookNow = () => {
     return query ? allFlour.filter(f => f.toLowerCase().includes(query)) : allFlour;
   }, [allFlour, flourSearchQuery]);
 
-  const filteredRecipes = useMemo(() => {
+  const baseMatchedRecipes = useMemo(() => {
     if (!recipes) return [];
 
     // Deduplicate recipes by ID or Title to prevent ghost duplicates
@@ -124,48 +151,23 @@ const CookNow = () => {
     return uniqueRecipes.map(recipe => {
       let matchedCount = 0;
       let missingIngredients = [];
-      let totalCount = 0;
+      const allSelected = [...selectedIngredients, ...selectedVegetables, ...selectedFlour];
+      
+      const recipeIngredients = (recipe.ingredients || []).map(i => typeof i === 'string' ? cleanIngredientName(i) : '').filter(i => i && i.length > 1);
+      const recipeVegetables = (recipe.vegetables || []).map(i => typeof i === 'string' ? cleanIngredientName(i) : '').filter(i => i && i.length > 1);
+      const recipeFlour = (recipe.flour || []).map(i => typeof i === 'string' ? cleanIngredientName(i) : '').filter(i => i && i.length > 1);
+      
+      const allRecipeItems = [...recipeIngredients, ...recipeVegetables, ...recipeFlour];
+      const totalCount = allRecipeItems.length;
 
-      if (recipe.ingredients) {
-        totalCount += recipe.ingredients.length;
-        const cleanItems = recipe.ingredients.map(i => typeof i === 'string' ? cleanIngredientName(i) : '');
-        if (totalSelectedCount > 0) {
-           cleanItems.forEach((cleanItem) => {
-              if (cleanItem && selectedIngredients.includes(cleanItem)) {
-                matchedCount++;
-              } else if (cleanItem && !missingIngredients.includes(cleanItem)) {
-                missingIngredients.push(cleanItem);
-              }
-           });
-        }
-      }
-
-      if (recipe.vegetables) {
-        totalCount += recipe.vegetables.length;
-        const cleanItems = recipe.vegetables.map(i => typeof i === 'string' ? cleanIngredientName(i) : '');
-        if (totalSelectedCount > 0) {
-           cleanItems.forEach((cleanItem) => {
-              if (cleanItem && selectedVegetables.includes(cleanItem)) {
-                matchedCount++;
-              } else if (cleanItem && !missingIngredients.includes(cleanItem)) {
-                missingIngredients.push(cleanItem);
-              }
-           });
-        }
-      }
-
-      if (recipe.flour) {
-        totalCount += recipe.flour.length;
-        const cleanItems = recipe.flour.map(i => typeof i === 'string' ? cleanIngredientName(i) : '');
-        if (totalSelectedCount > 0) {
-           cleanItems.forEach((cleanItem) => {
-              if (cleanItem && selectedFlour.includes(cleanItem)) {
-                matchedCount++;
-              } else if (cleanItem && !missingIngredients.includes(cleanItem)) {
-                missingIngredients.push(cleanItem);
-              }
-           });
-        }
+      if (totalSelectedCount > 0) {
+        allRecipeItems.forEach((cleanItem) => {
+          if (allSelected.includes(cleanItem)) {
+            matchedCount++;
+          } else if (!missingIngredients.includes(cleanItem)) {
+            missingIngredients.push(cleanItem);
+          }
+        });
       }
 
       const matchPercentage = totalCount === 0 ? 0 : (matchedCount / totalCount) * 100;
@@ -173,10 +175,29 @@ const CookNow = () => {
 
       return { ...recipe, matchedCount, missingIngredients, matchPercentage, totalTimeMinutes };
     }).filter(recipe => {
-      const matchesSearch = !recipeSearchQuery || (recipe.title && recipe.title.toLowerCase().includes(recipeSearchQuery.toLowerCase()));
-      const matchesDiet = dietFilter === 'All' || (recipe.category && recipe.category.toLowerCase().includes(dietFilter.toLowerCase()));
+      const query = recipeSearchQuery.toLowerCase();
+      const matchesSearch = !query || (
+        (recipe.title && recipe.title.toLowerCase().includes(query)) ||
+        (recipe.ingredients && recipe.ingredients.some(i => typeof i === 'string' && i.toLowerCase().includes(query))) ||
+        (recipe.vegetables && recipe.vegetables.some(v => typeof v === 'string' && v.toLowerCase().includes(query))) ||
+        (recipe.flour && recipe.flour.some(f => typeof f === 'string' && f.toLowerCase().includes(query)))
+      );
       const matchesPercentage = totalSelectedCount === 0 || recipe.matchPercentage >= 40;
-      return matchesPercentage && matchesSearch && matchesDiet;
+      return matchesPercentage && matchesSearch;
+    });
+  }, [recipes, selectedIngredients, selectedVegetables, selectedFlour, recipeSearchQuery, totalSelectedCount]);
+
+  const dietCounts = useMemo(() => {
+    return {
+      All: baseMatchedRecipes.length,
+      Veg: baseMatchedRecipes.filter(r => r.category?.toLowerCase() === 'veg').length,
+      'Non-Veg': baseMatchedRecipes.filter(r => r.category?.toLowerCase() === 'non-veg').length
+    };
+  }, [baseMatchedRecipes]);
+
+  const filteredRecipes = useMemo(() => {
+    return baseMatchedRecipes.filter(recipe => {
+      return dietFilter === 'All' || (recipe.category && recipe.category.toLowerCase() === dietFilter.toLowerCase());
     }).sort((a, b) => {
       if (totalSelectedCount > 0 && b.matchPercentage !== a.matchPercentage) {
         return b.matchPercentage - a.matchPercentage;
@@ -185,7 +206,7 @@ const CookNow = () => {
       const bTime = b.totalTimeMinutes;
       return aTime !== bTime ? aTime - bTime : 0;
     });
-  }, [recipes, selectedIngredients, selectedVegetables, selectedFlour, recipeSearchQuery, dietFilter, totalSelectedCount]);
+  }, [baseMatchedRecipes, dietFilter, totalSelectedCount]);
 
   if (loading) {
     return (
@@ -237,25 +258,6 @@ const CookNow = () => {
             </p>
           </div>
 
-          <div className="flex justify-center mb-10 w-full">
-            <div className="flex bg-[#171717]/80 backdrop-blur-md p-1.5 rounded-2xl border border-white/10 shadow-lg">
-              {['All', 'Veg', 'Non-Veg'].map(type => (
-                <button
-                  key={type}
-                  onClick={() => setDietFilter(type)}
-                  className={`px-5 py-2 md:px-8 md:py-2.5 flex items-center justify-center gap-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${dietFilter === type
-                      ? type === 'Veg' ? 'bg-[#10b981]/20 text-[#10b981] shadow-[0_4px_12px_rgba(16,185,129,0.2)]'
-                      : type === 'Non-Veg' ? 'bg-[#ef4444]/20 text-[#ef4444] shadow-[0_4px_12px_rgba(239,68,68,0.2)]'
-                      : 'bg-white/10 text-white shadow-[0_4px_12px_rgba(255,255,255,0.1)]'
-                      : 'text-text-secondary hover:text-white hover:bg-white/5'
-                    }`}
-                >
-                  <div className={`w-2 h-2 rounded-full ${dietFilter === type ? (type === 'Veg' ? 'bg-[#10b981]' : type === 'Non-Veg' ? 'bg-[#ef4444]' : 'bg-white') : 'bg-transparent border border-text-secondary'}`} />
-                  {type}
-                </button>
-              ))}
-            </div>
-          </div>
 
           <div className="w-full bg-bg-secondary border border-border-primary rounded-3xl p-8 shadow-xl">
             {/* Matches Found Banner */}
@@ -486,12 +488,15 @@ const CookNow = () => {
               <button
                 key={type}
                 onClick={() => setDietFilter(type)}
-                className={`flex-1 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 text-center ${dietFilter === type
+                className={`flex-1 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 text-center flex items-center justify-center gap-2 ${dietFilter === type
                     ? type === 'Veg' ? 'bg-[#10b981]/20 text-[#10b981]' : type === 'Non-Veg' ? 'bg-[#ef4444]/20 text-[#ef4444]' : 'bg-white/10 text-white'
                     : 'text-text-secondary hover:text-white hover:bg-white/5'
                   }`}
               >
                 {type}
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${dietFilter === type ? 'bg-white/10' : 'bg-white/5 border border-white/5'}`}>
+                  {dietCounts[type]}
+                </span>
               </button>
             ))}
           </div>
@@ -501,7 +506,7 @@ const CookNow = () => {
             </div>
             <input
               type="text"
-              placeholder="Filter results..."
+              placeholder="Search by title, vegetable, or flour..."
               value={recipeSearchQuery}
               onChange={(e) => setRecipeSearchQuery(e.target.value)}
               className="w-full pl-10 pr-10 py-3 bg-bg-secondary border border-border-primary rounded-xl text-text-primary transition-all duration-200 focus:outline-none focus:border-accent"
@@ -538,10 +543,13 @@ const CookNow = () => {
             <div key={recipe.id || index} className="flex flex-col bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.5)] hover:border-white/10 group">
               <div className="relative h-48 overflow-hidden bg-[#222]">
                 <img
-                  src={recipe.image_url || 'https://via.placeholder.com/400x300?text=Recipe'}
+                  src={recipe.image_url || 'https://res.cloudinary.com/dw4j19xmz/image/upload/v1773396970/Remove_background_project_3_new_nyocqk.png'}
                   alt={recipe.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  onError={(e) => { e.target.src = 'https://via.placeholder.com/400x300?text=Recipe' }}
+                  onError={(e) => { 
+                    e.target.src = 'https://res.cloudinary.com/dw4j19xmz/image/upload/v1773396970/Remove_background_project_3_new_nyocqk.png';
+                    e.target.classList.add('p-8', 'object-contain', 'bg-[#1a1a1a]'); 
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-bg-secondary via-transparent to-transparent opacity-80"></div>
                 
@@ -561,6 +569,16 @@ const CookNow = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Missing Ingredients Badge (Top Left) */}
+                {totalSelectedCount > 0 && recipe.missingIngredients?.length > 0 && (
+                  <div className="absolute top-4 left-4 z-10 animate-in fade-in zoom-in duration-300">
+                    <div className="px-3 py-1.5 rounded-lg backdrop-blur-md bg-red-500/20 border border-red-500/30 text-red-500 text-xs font-bold shadow-lg flex items-center gap-1.5">
+                      <span className="flex h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                      +{recipe.missingIngredients.length} Needs
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="p-5 flex flex-col flex-1">
                 <h3 className="text-lg font-bold text-white mb-2 line-clamp-2">{recipe.title}</h3>
@@ -584,11 +602,14 @@ const CookNow = () => {
                 </p>
                 {totalSelectedCount > 0 && recipe.missingIngredients?.length > 0 && (
                   <div className="mb-4 mt-auto">
-                    <span className="font-semibold text-[#ef4444] text-xs mb-1 block">Missing Ingredients ({recipe.missingIngredients.length}):</span>
+                    <span className="font-semibold text-[#ef4444] text-[10px] uppercase tracking-wider mb-1 block opacity-80">Missing:</span>
                     <p className="text-xs text-text-secondary line-clamp-2">{recipe.missingIngredients.join(', ')}</p>
                   </div>
                 )}
-                <button className="w-full mt-auto py-3 rounded-xl font-semibold text-sm transition-all duration-200 bg-white/5 border border-white/10 text-white group-hover:bg-accent group-hover:border-accent">
+                <button 
+                  onClick={() => navigate(`/recipe/${recipe._id || recipe.id}`)}
+                  className="w-full mt-auto py-3 rounded-xl font-semibold text-sm transition-all duration-200 bg-white/5 border border-white/10 text-white group-hover:bg-accent group-hover:border-accent"
+                >
                   View Recipe
                 </button>
               </div>

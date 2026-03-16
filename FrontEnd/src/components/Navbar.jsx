@@ -2,11 +2,28 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 
+import { useRecipeContext } from '../context/RecipeContext';
+
 const Navbar = () => {
   const navigate = useNavigate();
+  const { 
+    setHasSearched, 
+    setSelectedIngredients, 
+    setSelectedVegetables, 
+    setSelectedFlour, 
+    setDietFilter 
+  } = useRecipeContext();
   const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
 
   const handleLogout = () => {
+    // Clear Context State
+    setHasSearched(false);
+    setSelectedIngredients([]);
+    setSelectedVegetables([]);
+    setSelectedFlour([]);
+    setDietFilter('All');
+    
+    // Clear Local Storage
     localStorage.removeItem('isAuthenticated');
     localStorage.removeItem('currentUser');
     navigate('/login');

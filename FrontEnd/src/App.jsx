@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import CookNow from './pages/CookNow';
+import RecipeDetail from './pages/RecipeDetail';
 import { RecipeProvider } from './context/RecipeContext';
 
 // Custom PrivateRoute component
@@ -47,6 +48,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <CookNow />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/recipe/:id"
+              element={
+                <PrivateRoute>
+                  <RecipeDetail />
                 </PrivateRoute>
               }
             />
