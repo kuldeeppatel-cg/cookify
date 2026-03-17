@@ -25,15 +25,16 @@ const RecipeDetail = () => {
     favoriteRecipes, toggleFavorite,
     addRecent 
   } = useRecipeContext();
-  const [recipe, setRecipe] = useState(null);
 
+  // Find recipe directly from context during render
+  const recipe = recipes?.find(r => (r._id || r.id).toString() === id);
+
+  // Sync with recent recipes once found
   useEffect(() => {
-    if (recipes && id) {
-      const found = recipes.find(r => (r._id || r.id).toString() === id);
-      setRecipe(found);
-      if (found) addRecent(found);
+    if (recipe) {
+      addRecent(recipe);
     }
-  }, [recipes, id, addRecent]);
+  }, [recipe, addRecent]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -41,9 +42,13 @@ const RecipeDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-32 flex flex-col items-center justify-center">
-        <div className="w-16 h-16 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-text-secondary animate-pulse">Loading recipe secrets...</p>
+      <div className="min-h-screen pt-32 pb-12 px-6 flex flex-col items-center justify-center bg-bg-primary">
+        <div className="w-28 h-28 md:w-36 md:h-36 mb-6 relative">
+          <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-contain mix-blend-screen">
+            <source src="https://res.cloudinary.com/dw4j19xmz/video/upload/v1773475402/Remove_background_project_4_aia7d1.mp4" type="video/mp4" />
+          </video>
+        </div>
+        <h2 className="text-xl md:text-2xl text-text-secondary font-medium animate-pulse mt-2">Loading recipe secrets...</h2>
       </div>
     );
   }

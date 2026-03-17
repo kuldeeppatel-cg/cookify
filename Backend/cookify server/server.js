@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const nodemailer = require('nodemailer');
 
 // 1. CONFIGURATION & MIDDLEWARE
 dotenv.config();
@@ -16,14 +17,43 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ Cookify Database Connected Successfully"))
   .catch(err => console.error("❌ MongoDB Connection Error:", err));
 
-// 3. MODELS
+// 3. EMAIL CONFIGURATION
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+// Helper to send email
+const sendOTPEmail = async (email, otp, type = 'verification') => {
+  const subject = type === 'verification' ? 'Cookify Account Verification' : 'Cookify Password Reset';
+  const text = type === 'verification' 
+    ? `Your verification code is: ${otp}. This code will expire in 10 minutes.`
+    : `Your password reset code is: ${otp}. This code will expire in 10 minutes.`;
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: subject,
+    text: text
+  };
+
+  return transporter.sendMail(mailOptions);
+};
+
+// 4. MODELS
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   savedRecipes: [{ type: String }],           
   favoriteRecipes: [{ type: String }],        
-  recentRecipes: [{ type: Object }],          
+  recentRecipes: [{ type: Object }],
+  isVerified: { type: Boolean, default: false },
+  otp: { type: String },
+  otpExpires: { type: Date },
   createdAt: { type: Date, default: Date.now }
 });
 const User = mongoose.model('User', userSchema);
@@ -43,7 +73,7 @@ const recipeSchema = new mongoose.Schema({
 }, { timestamps: true });
 const Recipe = mongoose.model('Recipe', recipeSchema);
 
-// 4. API ROUTES
+// 5. API ROUTES
 
 // Root Route
 app.get('/', (req, res) => {
@@ -61,21 +91,69 @@ app.get('/api/users/:id', async (req, res) => {
   }
 });
 
+// Register with OTP
 app.post('/api/users/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
     const emailExists = await User.findOne({ email });
     if (emailExists) return res.status(400).json({ message: "Email already registered" });
+    
     const usernameExists = await User.findOne({ username });
     if (usernameExists) return res.status(400).json({ message: "Username already taken" });
-    const newUser = new User({ username, email, password });
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
+    const newUser = new User({ 
+      username, 
+      email, 
+      password, 
+      otp, 
+      otpExpires,
+      isVerified: false 
+    });
+    
     await newUser.save();
-    res.status(201).json({ message: "User created!", user: newUser });
+    
+    try {
+      await sendOTPEmail(email, otp, 'verification');
+      res.status(201).json({ message: "OTP sent to email. Please verify.", email });
+    } catch (mailError) {
+      console.error("Mail Error:", mailError);
+      res.status(201).json({ message: "User registered, but failed to send OTP. Please try forgot password.", user: newUser });
+    }
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
+// Verify Registration OTP
+app.post('/api/users/verify-otp', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const user = await User.findOne({ 
+      email, 
+      otp, 
+      otpExpires: { $gt: Date.now() } 
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    user.isVerified = true;
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ message: "Account verified successfully", user });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Login (Updated to check isVerified)
 app.post('/api/users/login', async (req, res) => {
   try {
     const { identifier, password } = req.body;
@@ -83,11 +161,70 @@ app.post('/api/users/login', async (req, res) => {
       $or: [{ email: identifier }, { username: identifier }], 
       password 
     });
-    if (user) {
-      res.status(200).json({ message: "Login successful", user });
-    } else {
-      res.status(401).json({ message: "Invalid credentials" });
+
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" });
     }
+
+    if (!user.isVerified) {
+      // resend otp if not verified?
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      user.otp = otp;
+      user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+      await user.save();
+      await sendOTPEmail(user.email, otp, 'verification');
+      return res.status(403).json({ message: "Account not verified. OTP sent to email.", email: user.email });
+    }
+
+    res.status(200).json({ message: "Login successful", user });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Forgot Password - Send OTP
+app.post('/api/users/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    
+    if (!user) {
+      return res.status(404).json({ message: "User with this email not found" });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.otp = otp;
+    user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    await user.save();
+
+    await sendOTPEmail(email, otp, 'reset');
+    res.status(200).json({ message: "Password reset OTP sent to email" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Reset Password
+app.post('/api/users/reset-password', async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    const user = await User.findOne({ 
+      email, 
+      otp, 
+      otpExpires: { $gt: Date.now() } 
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    user.password = newPassword;
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    user.isVerified = true; // Also verify if they were not
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successful" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -197,7 +334,7 @@ app.delete('/api/recipes/:id', async (req, res) => {
   }
 });
 
-// 5. SERVER START
+// 6. SERVER START
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Unified Cookify Server running at http://localhost:${PORT}`);

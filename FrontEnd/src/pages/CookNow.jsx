@@ -222,7 +222,7 @@ const CookNow = () => {
             <source src="https://res.cloudinary.com/dw4j19xmz/video/upload/v1773475402/Remove_background_project_4_aia7d1.mp4" type="video/mp4" />
           </video>
         </div>
-        <h2 className="text-xl md:text-2xl text-text-secondary font-medium animate-pulse mt-2">Fetching fresh ingredients...</h2>
+        <h2 className="text-xl md:text-2xl text-text-secondary font-medium animate-pulse mt-2">Stocking the pantry...</h2>
       </div>
     );
   }
