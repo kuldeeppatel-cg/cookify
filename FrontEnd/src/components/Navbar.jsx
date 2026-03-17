@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   LogOut, Heart, Bookmark, PlusSquare, LayoutDashboard,
-  ChefHat, Menu, X, ChevronRight
+  ChefHat, Menu, X, ChevronRight, Utensils
 } from 'lucide-react';
 
 import { useRecipeContext } from '../context/RecipeContext';
@@ -45,6 +45,7 @@ const Navbar = () => {
 
   const navLinks = [
     { to: '/', label: 'Home', icon: LayoutDashboard },
+    { to: '/cook-now', label: 'Cook Now', icon: Utensils },
     { to: '/saved', label: 'Saved', icon: Bookmark },
     { to: '/my-recipes', label: 'My Recipes', icon: ChefHat },
     { to: '/favorites', label: 'Favorites', icon: Heart },
@@ -57,17 +58,20 @@ const Navbar = () => {
           {/* Logo Section */}
           <Link
             to="/"
-            className="flex items-center shrink-0"
+            className="flex items-center gap-3 shrink-0 group"
             onClick={() => {
               setIsMenuOpen(false);
               resetSearchState();
             }}
           >
             <img
-              src="https://res.cloudinary.com/dw4j19xmz/image/upload/v1773396970/Remove_background_project_3_new_nyocqk.png"
-              alt="Cookify Logo"
-              className="h-10 md:h-12 w-auto object-contain transition-transform duration-300 active:scale-95"
+              src="/logo-icon.png"
+              alt="Cookify Icon"
+              className="h-10 w-10 object-contain drop-shadow-[0_0_15px_rgba(37,116,120,0.4)] group-hover:scale-110 group-hover:rotate-6 transition-all duration-300"
             />
+            <span className="text-2xl font-black tracking-tighter bg-gradient-to-r from-accent to-emerald-400 bg-clip-text text-transparent group-hover:from-white group-hover:to-accent transition-all duration-300">
+              Cookify
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
