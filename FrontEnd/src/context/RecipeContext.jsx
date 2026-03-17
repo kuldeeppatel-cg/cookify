@@ -5,8 +5,10 @@ const RecipeContext = createContext();
 
 export const useRecipeContext = () => useContext(RecipeContext);
 
+const API_BASE_URL = 'https://cookify-pou0.onrender.com/api';
+
 export const RecipeProvider = ({ children }) => {
-  const { data: recipes, loading, error, refetch } = useApi('http://localhost:3000/api/recipes');
+  const { data: recipes, loading, error, refetch } = useApi(`${API_BASE_URL}/recipes`);
   const user = localStorage.getItem('currentUser') || 'default';
   const userId = localStorage.getItem('currentUserId');
   
@@ -25,7 +27,7 @@ export const RecipeProvider = ({ children }) => {
   // Fetch user data from backend on mount or when user changes
   useEffect(() => {
     if (userId) {
-      fetch(`http://localhost:5000/api/users/${userId}`)
+      fetch(`${API_BASE_URL}/users/${userId}`)
         .then(res => res.json())
         .then(data => {
           if (data) {
@@ -58,7 +60,7 @@ export const RecipeProvider = ({ children }) => {
       
       // Sync with backend
       if (userId) {
-        fetch(`http://localhost:5000/api/users/${userId}/save-recipe`, {
+        fetch(`${API_BASE_URL}/users/${userId}/save-recipe`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ recipeId: id })
@@ -76,7 +78,7 @@ export const RecipeProvider = ({ children }) => {
 
       // Sync with backend
       if (userId) {
-        fetch(`http://localhost:5000/api/users/${userId}/favorite-recipe`, {
+        fetch(`${API_BASE_URL}/users/${userId}/favorite-recipe`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ recipeId: id })
@@ -102,7 +104,7 @@ export const RecipeProvider = ({ children }) => {
     if (userId && recentRecipes.length >= 0) {
       // Small debounce or simple check to avoid unnecessary hits
       const timer = setTimeout(() => {
-        fetch(`http://localhost:5000/api/users/${userId}/recent-recipes`, {
+        fetch(`${API_BASE_URL}/users/${userId}/recent-recipes`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ recentRecipes })
@@ -114,7 +116,7 @@ export const RecipeProvider = ({ children }) => {
 
   const addRecipe = useCallback(async (recipeData) => {
     try {
-      const response = await fetch('http://localhost:3000/api/recipes/bulk', {
+      const response = await fetch(`${API_BASE_URL}/recipes/bulk`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...recipeData, createdBy: user })
@@ -130,7 +132,7 @@ export const RecipeProvider = ({ children }) => {
 
   const deleteRecipe = useCallback(async (id) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/recipes/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/recipes/${id}`, {
         method: 'DELETE'
       });
       if (!response.ok) throw new Error('Failed to delete recipe');
@@ -150,7 +152,7 @@ export const RecipeProvider = ({ children }) => {
 
   const updateRecipe = useCallback(async (id, recipeData) => {
     try {
-      const response = await fetch(`http://localhost:3000/api/recipes/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/recipes/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(recipeData)

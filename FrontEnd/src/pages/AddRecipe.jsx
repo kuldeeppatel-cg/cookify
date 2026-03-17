@@ -338,7 +338,7 @@ const AddRecipe = () => {
                       {formData.flour.length > 1 && (
                         <button 
                           type="button" 
-                          onClick={() => removeArrayField(index, 'flour')}
+                          onClick={() => removeArrayField(i, 'flour')}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           <Trash2 size={16} />
