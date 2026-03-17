@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
+import API_BASE_URL from '../apiConfig';
 
 const Login = () => {
   const [formData, setFormData] = useState({ identifier: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://cookifyotpauthentication.onrender.com';
 
   useEffect(() => {
     if (localStorage.getItem('isAuthenticated') === 'true') {
@@ -35,15 +34,6 @@ const Login = () => {
       });
 
       const data = await response.json();
-
-      if (response.status === 403) {
-        // Account not verified
-        setError('Account not verified. Redirecting to verification...');
-        setTimeout(() => {
-          navigate('/signup', { state: { email: data.email, step: 'otp' } });
-        }, 2000);
-        return;
-      }
 
       if (!response.ok) {
         throw new Error(data.message || 'Login failed');

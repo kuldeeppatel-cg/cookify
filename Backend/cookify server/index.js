@@ -16,14 +16,15 @@ mongoose.connect(MONGO_URI)
   .then(() => console.log("✅ Cookify Database Connected Successfully"))
   .catch(err => console.error("❌ MongoDB Connection Error:", err));
 
-// 3. MODELS
+// 4. MODELS
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   savedRecipes: [{ type: String }],           
   favoriteRecipes: [{ type: String }],        
-  recentRecipes: [{ type: Object }],          
+  recentRecipes: [{ type: Object }],
+  isVerified: { type: Boolean, default: true }, // Default to true now
   createdAt: { type: Date, default: Date.now }
 });
 const User = mongoose.model('User', userSchema);
@@ -43,11 +44,11 @@ const recipeSchema = new mongoose.Schema({
 }, { timestamps: true });
 const Recipe = mongoose.model('Recipe', recipeSchema);
 
-// 4. API ROUTES
+// 5. API ROUTES
 
 // Root Route
 app.get('/', (req, res) => {
-  res.send('Cookify Unified Server is Online');
+  res.send('Cookify Unified Server is Online (OTP Disabled)');
 });
 
 // --- USER ROUTES ---
@@ -61,21 +62,31 @@ app.get('/api/users/:id', async (req, res) => {
   }
 });
 
+// Register (No OTP)
 app.post('/api/users/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
     const emailExists = await User.findOne({ email });
     if (emailExists) return res.status(400).json({ message: "Email already registered" });
+    
     const usernameExists = await User.findOne({ username });
     if (usernameExists) return res.status(400).json({ message: "Username already taken" });
-    const newUser = new User({ username, email, password });
+
+    const newUser = new User({ 
+      username, 
+      email, 
+      password, 
+      isVerified: true 
+    });
+    
     await newUser.save();
-    res.status(201).json({ message: "User created!", user: newUser });
+    res.status(201).json({ message: "User created successfully", user: newUser });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
+// Login (No OTP check)
 app.post('/api/users/login', async (req, res) => {
   try {
     const { identifier, password } = req.body;
@@ -83,11 +94,45 @@ app.post('/api/users/login', async (req, res) => {
       $or: [{ email: identifier }, { username: identifier }], 
       password 
     });
-    if (user) {
-      res.status(200).json({ message: "Login successful", user });
-    } else {
-      res.status(401).json({ message: "Invalid credentials" });
+
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" });
     }
+
+    res.status(200).json({ message: "Login successful", user });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Forgot Password - Just check if user exists
+app.post('/api/users/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User with this email not found" });
+    }
+    res.status(200).json({ message: "User found, proceed to reset" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Reset Password (No OTP verification)
+app.post('/api/users/reset-password', async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successful" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -197,7 +242,7 @@ app.delete('/api/recipes/:id', async (req, res) => {
   }
 });
 
-// 5. SERVER START
+// 6. SERVER START
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Unified Cookify Server running at http://localhost:${PORT}`);

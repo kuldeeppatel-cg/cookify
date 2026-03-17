@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import useApi from '../hooks/useApi';
+import BASE_URL from '../apiConfig';
 
 const RecipeContext = createContext();
 
 export const useRecipeContext = () => useContext(RecipeContext);
 
-const API_BASE_URL = (window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://cookifyotpauthentication.onrender.com') + '/api';
+const API_BASE_URL = `${BASE_URL}/api`;
 
 export const RecipeProvider = ({ children }) => {
   const { data: recipes, loading, error, refetch } = useApi(`${API_BASE_URL}/recipes`);

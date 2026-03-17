@@ -1,19 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, ShieldCheck, Lock, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, ArrowLeft } from 'lucide-react';
+import API_BASE_URL from '../apiConfig';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [step, setStep] = useState('email'); // 'email', 'otp', 'reset'
+  const [step, setStep] = useState('email'); // 'email', 'reset'
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://cookifyotpauthentication.onrender.com';
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
@@ -26,25 +24,15 @@ const ForgotPassword = () => {
         body: JSON.stringify({ email })
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Error sending OTP');
+      if (!response.ok) throw new Error(data.message || 'Error checking email');
       
-      setStep('otp');
-      setMessage('OTP has been sent to your email.');
+      setStep('reset');
+      setMessage('Account found. You can now reset your password.');
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleOtpSubmit = (e) => {
-    e.preventDefault();
-    if (otp.length !== 6) {
-      setError('Please enter a valid 6-digit OTP');
-      return;
-    }
-    setStep('reset');
-    setError('');
   };
 
   const handleResetSubmit = async (e) => {
@@ -63,7 +51,7 @@ const ForgotPassword = () => {
       const response = await fetch(`${API_BASE_URL}/api/users/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp, newPassword })
+        body: JSON.stringify({ email, newPassword })
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Error resetting password');
@@ -86,7 +74,7 @@ const ForgotPassword = () => {
             Back to Login
           </Link>
           <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-[#f8fafc] to-[#94a3b8] bg-clip-text text-transparent">Reset Password</h1>
-          <p className="text-text-secondary">Follow the steps to recover your account</p>
+          <p className="text-text-secondary">Enter your email and a new password</p>
         </div>
 
         {error && <div className="text-error text-sm mb-4 p-3 bg-red-500/10 border-l-4 border-error rounded">{error}</div>}
@@ -107,28 +95,7 @@ const ForgotPassword = () => {
               />
             </div>
             <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold bg-accent text-white hover:bg-accent-hover transition-all disabled:opacity-50">
-              {loading ? 'Sending...' : <><Mail size={20} /> Send OTP</>}
-            </button>
-          </form>
-        )}
-
-        {step === 'otp' && (
-          <form onSubmit={handleOtpSubmit}>
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-text-primary mb-2" htmlFor="otp">Enter 6-digit OTP</label>
-              <input
-                type="text"
-                id="otp"
-                maxLength="6"
-                placeholder="000000"
-                className="w-full px-4 py-3 bg-bg-secondary border border-border-primary rounded-xl text-text-primary text-center text-2xl tracking-widest font-bold focus:outline-none focus:border-accent"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                required
-              />
-            </div>
-            <button type="submit" className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold bg-accent text-white hover:bg-accent-hover transition-all">
-              <ShieldCheck size={20} /> Verify OTP
+              {loading ? 'Checking...' : <><Mail size={20} /> Continue</>}
             </button>
           </form>
         )}
