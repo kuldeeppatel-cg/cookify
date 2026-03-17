@@ -17,7 +17,7 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
 
   // Use local backend for development, fallback to render if needed
-  const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://cookify-pou0.onrender.com';
+  const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://cookifyotpauthentication.onrender.com';
 
   useEffect(() => {
     if (localStorage.getItem('isAuthenticated') === 'true') {

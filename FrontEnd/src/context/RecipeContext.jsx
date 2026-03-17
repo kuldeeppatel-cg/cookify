@@ -5,7 +5,7 @@ const RecipeContext = createContext();
 
 export const useRecipeContext = () => useContext(RecipeContext);
 
-const API_BASE_URL = 'https://cookify-pou0.onrender.com/api';
+const API_BASE_URL = (window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://cookifyotpauthentication.onrender.com') + '/api';
 
 export const RecipeProvider = ({ children }) => {
   const { data: recipes, loading, error, refetch } = useApi(`${API_BASE_URL}/recipes`);
