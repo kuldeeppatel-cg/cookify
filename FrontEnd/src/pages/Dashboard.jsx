@@ -6,13 +6,43 @@ import { useRecipeContext } from '../context/RecipeContext';
 const Dashboard = () => {
   const navigate = useNavigate();
   const username = localStorage.getItem('currentUser') || 'Chef';
-  const { savedRecipes, favoriteRecipes, recentRecipes, recipes } = useRecipeContext();
+  const { savedRecipes, favoriteRecipes, recentRecipes, recipes, loading, isUserLoading, error } = useRecipeContext();
 
   useEffect(() => {
     if (localStorage.getItem('isAuthenticated') !== 'true') {
       navigate('/login');
     }
   }, [navigate]);
+
+  if (loading || isUserLoading) {
+    return (
+      <div className="min-h-screen pt-32 pb-12 px-6 flex flex-col items-center justify-center bg-bg-primary">
+        <div className="w-28 h-28 md:w-36 md:h-36 mb-6 relative">
+          <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-contain mix-blend-screen">
+            <source src="https://res.cloudinary.com/dw4j19xmz/video/upload/v1773475402/Remove_background_project_4_aia7d1.mp4" type="video/mp4" />
+          </video>
+        </div>
+        <h2 className="text-xl md:text-2xl text-text-secondary font-medium animate-pulse mt-2">Waking up the chef...</h2>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen pt-32 px-6 flex flex-col items-center justify-center text-center">
+        <div className="bg-bg-secondary p-10 rounded-3xl border border-red-500/20 max-w-md">
+          <h2 className="text-2xl font-bold text-red-500 mb-4">Dashboard Error</h2>
+          <p className="text-text-secondary mb-8">We couldn't load your dashboard data. Please check your connection and try again.</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-8 py-3 bg-accent text-white rounded-xl font-bold hover:bg-accent-hover transition-all"
+          >
+            Retry Now
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pt-24 min-h-screen flex flex-col max-w-[1200px] mx-auto px-6 pb-20">

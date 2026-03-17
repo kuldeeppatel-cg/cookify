@@ -23,10 +23,12 @@ export const RecipeProvider = ({ children }) => {
   const [savedRecipes, setSavedRecipes] = useState([]);
   const [favoriteRecipes, setFavoriteRecipes] = useState([]);
   const [recentRecipes, setRecentRecipes] = useState([]);
+  const [isUserLoading, setIsUserLoading] = useState(true);
 
   // Fetch user data from backend on mount or when user changes
   useEffect(() => {
     if (userId) {
+      setIsUserLoading(true);
       fetch(`${API_BASE_URL}/users/${userId}`)
         .then(res => res.json())
         .then(data => {
@@ -36,7 +38,10 @@ export const RecipeProvider = ({ children }) => {
             setRecentRecipes(data.recentRecipes || []);
           }
         })
-        .catch(err => console.error('Failed to fetch user data:', err));
+        .catch(err => console.error('Failed to fetch user data:', err))
+        .finally(() => setIsUserLoading(false));
+    } else {
+      setIsUserLoading(false);
     }
   }, [userId]);
 
@@ -168,7 +173,7 @@ export const RecipeProvider = ({ children }) => {
 
   return (
     <RecipeContext.Provider value={{ 
-      recipes, loading, error,
+      recipes, loading, error, isUserLoading,
       hasSearched, setHasSearched,
       selectedIngredients, setSelectedIngredients,
       selectedVegetables, setSelectedVegetables,
