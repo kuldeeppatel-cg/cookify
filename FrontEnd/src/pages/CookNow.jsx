@@ -58,8 +58,6 @@ const CookNow = () => {
 
   const totalSelectedCount = selectedIngredients.length + selectedVegetables.length + selectedFlour.length;
 
-  // Only scroll to top when hasSearched changes FROM false TO true (user clicks search)
-  // We avoid scrolling to top when returning from a detail page (hasSearched stays true)
   const prevHasSearched = React.useRef(hasSearched);
   useEffect(() => {
     if (!prevHasSearched.current && hasSearched) {
@@ -71,27 +69,6 @@ const CookNow = () => {
   const getItemsSet = (recipes, filter, selected, path) => {
     if (!recipes) return [];
     const relevantRecipes = filter === 'All' ? recipes : recipes.filter(r => r?.category === filter);
-    const itemsSet = new Set();
-    relevantRecipes.forEach(recipe => {
-      const paths = ['ingredients', 'vegetables', 'flour'];
-      paths.forEach(p => {
-        const arr = recipe[p];
-        if (arr && Array.isArray(arr)) {
-          arr.forEach(ing => {
-            if (typeof ing === 'string') {
-              let cleanIng = cleanIngredientName(ing);
-              // Only collect ingredients that have meaningful content
-              if (cleanIng && cleanIng.length > 1) itemsSet.add(cleanIng);
-            }
-          });
-        }
-      });
-    });
-    // CRITICAL: Always include currently selected items so they don't disappear from the UI
-    selected.forEach(ing => itemsSet.add(ing));
-    // Filter the itemsSet for the specific path requested if still needed, 
-    // but the current UI calls this for each path separately.
-    // To fix the 'missing items' issue, we should ensure the selected tab only shows items found in that path.
     const pathItems = new Set();
     relevantRecipes.forEach(recipe => {
       const arr = recipe[path];
@@ -144,8 +121,6 @@ const CookNow = () => {
 
   const baseMatchedRecipes = useMemo(() => {
     if (!recipes) return [];
-
-    // Deduplicate recipes by ID or Title to prevent ghost duplicates
     const seen = new Set();
     const uniqueRecipes = recipes.filter(recipe => {
       const identifier = (recipe.id || recipe._id || recipe.title)?.toString().toLowerCase();
@@ -158,27 +133,21 @@ const CookNow = () => {
       let matchedCount = 0;
       let missingIngredients = [];
       const allSelected = [...selectedIngredients, ...selectedVegetables, ...selectedFlour];
+      const allRecipeItems = [
+        ...(recipe.ingredients || []), 
+        ...(recipe.vegetables || []), 
+        ...(recipe.flour || [])
+      ].map(i => typeof i === 'string' ? cleanIngredientName(i) : '').filter(i => i && i.length > 1);
       
-      const recipeIngredients = (recipe.ingredients || []).map(i => typeof i === 'string' ? cleanIngredientName(i) : '').filter(i => i && i.length > 1);
-      const recipeVegetables = (recipe.vegetables || []).map(i => typeof i === 'string' ? cleanIngredientName(i) : '').filter(i => i && i.length > 1);
-      const recipeFlour = (recipe.flour || []).map(i => typeof i === 'string' ? cleanIngredientName(i) : '').filter(i => i && i.length > 1);
-      
-      const allRecipeItems = [...recipeIngredients, ...recipeVegetables, ...recipeFlour];
       const totalCount = allRecipeItems.length;
-
       if (totalSelectedCount > 0) {
         allRecipeItems.forEach((cleanItem) => {
-          if (allSelected.includes(cleanItem)) {
-            matchedCount++;
-          } else if (!missingIngredients.includes(cleanItem)) {
-            missingIngredients.push(cleanItem);
-          }
+          if (allSelected.includes(cleanItem)) matchedCount++;
+          else if (!missingIngredients.includes(cleanItem)) missingIngredients.push(cleanItem);
         });
       }
-
       const matchPercentage = totalCount === 0 ? 0 : (matchedCount / totalCount) * 100;
       const totalTimeMinutes = parseTime(recipe.prep_time) + parseTime(recipe.cook_time);
-
       return { ...recipe, matchedCount, missingIngredients, matchPercentage, totalTimeMinutes };
     }).filter(recipe => {
       const query = recipeSearchQuery.toLowerCase();
@@ -205,9 +174,7 @@ const CookNow = () => {
     return baseMatchedRecipes.filter(recipe => {
       return dietFilter === 'All' || (recipe.category && recipe.category.toLowerCase() === dietFilter.toLowerCase());
     }).sort((a, b) => {
-      if (totalSelectedCount > 0 && b.matchPercentage !== a.matchPercentage) {
-        return b.matchPercentage - a.matchPercentage;
-      }
+      if (totalSelectedCount > 0 && b.matchPercentage !== a.matchPercentage) return b.matchPercentage - a.matchPercentage;
       const aTime = a.totalTimeMinutes;
       const bTime = b.totalTimeMinutes;
       return aTime !== bTime ? aTime - bTime : 0;
@@ -238,216 +205,138 @@ const CookNow = () => {
     );
   }
 
-  // STEP 1: Ingredient Selection UI
+  // STEP 1: Selection UI
   if (!hasSearched) {
     return (
-      <div key="selection-step" className="min-h-screen pt-32 md:pt-40 pb-12 px-6 max-w-[1200px] mx-auto animate-in fade-in duration-500">
-        <div className="max-w-3xl mx-auto flex flex-col items-center relative">
-          <div className="w-full flex justify-start mb-8 -ml-4 lg:-ml-12">
+      <div className="min-h-screen pt-28 md:pt-40 pb-32 px-4 md:px-6 max-w-[1200px] mx-auto animate-in fade-in duration-500 overflow-x-hidden">
+        {/* Mobile Sticky CTA */}
+        {totalSelectedCount > 0 && filteredRecipes.length > 0 && (
+          <div className="fixed bottom-0 left-0 right-0 z-[100] p-4 bg-gradient-to-t from-bg-primary via-bg-primary to-transparent md:hidden animate-in slide-in-from-bottom-full duration-500">
             <button
-              onClick={() => navigate('/')}
-              className="group flex items-center gap-3 px-5 py-2.5 bg-[#171717]/80 backdrop-blur-md border border-white/10 rounded-full font-medium text-sm text-text-secondary transition-all duration-300 hover:text-white hover:border-accent hover:shadow-[0_0_20px_rgba(37,116,120,0.3)] hover:-translate-x-1"
+              onClick={() => setHasSearched(true)}
+              className="w-full flex items-center justify-center gap-3 py-5 bg-accent text-white rounded-2xl font-black text-lg shadow-[0_10px_30px_rgba(37,116,120,0.4)] active:scale-95 transition-all"
             >
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5 group-hover:bg-accent transition-colors duration-300">
-                <ArrowLeft size={16} className="text-text-secondary group-hover:text-white transition-colors duration-300" />
-              </div>
-              <span className="tracking-wide">Dashboard</span>
+              View {filteredRecipes.length} Matches
+              <ArrowRight size={22} className="animate-bounce-subtle" />
             </button>
           </div>
-          
-          <div className="mb-10 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-[#f8fafc] to-[#94a3b8] bg-clip-text text-transparent">
-              What's in your kitchen?
+        )}
+
+        <div className="max-w-4xl mx-auto">
+          <button
+            onClick={() => navigate('/')}
+            className="group flex items-center gap-3 px-5 py-2.5 mb-8 bg-bg-secondary border border-border-primary rounded-full font-bold text-sm text-text-secondary hover:text-white transition-all"
+          >
+            <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+            Dashboard
+          </button>
+
+          <header className="mb-12">
+            <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tight leading-tight">
+              What's in your <span className="bg-gradient-to-r from-accent to-emerald-400 bg-clip-text text-transparent">kitchen?</span>
             </h1>
-            <p className="text-text-secondary text-lg max-w-2xl mx-auto">
-              Select the ingredients you have on hand, and we'll find the perfect recipes you can cook right now.
+            <p className="text-text-secondary text-lg md:text-xl max-w-2xl leading-relaxed">
+              Select what you have, and we'll reveal the magic you can cook right now.
             </p>
-          </div>
+          </header>
 
-
-          <div className="w-full bg-bg-secondary border border-border-primary rounded-3xl p-8 shadow-xl">
-            {/* Matches Found Banner */}
-            {totalSelectedCount > 0 && (
-              <div className="mb-6 flex items-center justify-between p-4 bg-accent/10 border border-accent/20 rounded-2xl animate-in fade-in slide-in-from-top-4 duration-300">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-10 h-10 bg-accent/20 rounded-xl text-accent">
-                    <ChefHat size={20} />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-text-primary text-sm md:text-base">
-                      {filteredRecipes.length > 0 ? `${filteredRecipes.length} Recipe Matches Found` : 'No Recipes Found'}
-                    </h3>
-                    <p className="text-xs text-text-secondary">
-                      {filteredRecipes.length > 0 ? 'Click View Matches to see them!' : 'Try adding more items'}
-                    </p>
-                  </div>
-                </div>
-                {filteredRecipes.length > 0 && (
+          <div className="bg-bg-secondary border border-border-primary rounded-[2.5rem] p-4 md:p-8 shadow-2xl relative overflow-hidden">
+            {/* Background Glow */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-accent/20 blur-[100px] pointer-events-none rounded-full" />
+            
+            {/* Custom Tab Bar */}
+            <div className="flex bg-bg-primary/40 p-1.5 rounded-3xl border border-border-primary overflow-x-auto no-scrollbar mb-8 gap-2 relative z-10">
+              {[
+                { id: 'vegetables', label: 'Vegetables', icon: Carrot, count: selectedVegetables.length, color: 'text-emerald-400', activeBg: 'bg-emerald-500/20 border-emerald-500/30' },
+                { id: 'flour', label: 'Flour & Grains', icon: Wheat, count: selectedFlour.length, color: 'text-amber-400', activeBg: 'bg-amber-500/20 border-amber-500/30' },
+                { id: 'ingredients', label: 'Other Items', icon: ShoppingBag, count: selectedIngredients.length, color: 'text-accent', activeBg: 'bg-accent/20 border-accent/40' }
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
                   <button
-                    onClick={() => setHasSearched(true)}
-                    className="hidden sm:flex items-center gap-2 px-4 py-2 bg-accent text-white text-sm font-semibold rounded-xl hover:bg-accent-hover transition-all duration-200 shadow-md hover:-translate-y-0.5"
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-1 flex flex-col sm:flex-row items-center justify-center gap-2 px-4 py-4 md:py-3.5 min-w-[120px] rounded-[1.25rem] font-black transition-all duration-500 border-2 ${
+                      isActive ? `${tab.activeBg} ${tab.color} scale-[1.02]` : 'bg-transparent border-transparent text-text-secondary hover:bg-white/5'
+                    }`}
                   >
-                    View Matches
-                    <ArrowRight size={16} />
+                    <Icon size={isActive ? 24 : 20} className={isActive ? "animate-bounce-subtle" : ""} />
+                    <span className="text-sm md:text-base whitespace-nowrap">{tab.label}</span>
+                    {tab.count > 0 && (
+                      <span className={`flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-black border-2 ${isActive ? 'bg-white/20 border-white/50' : 'bg-bg-secondary border-border-primary'}`}>
+                        {tab.count}
+                      </span>
+                    )}
                   </button>
-                )}
-              </div>
-            )}
+                );
+              })}
+            </div>
 
-            {/* Tabbed Ingredient Selector */}
-            <div className="mb-8">
-              <div className="flex p-1.5 bg-bg-primary/50 backdrop-blur-md rounded-2xl border border-border-primary overflow-x-auto custom-scrollbar mb-6 gap-2">
-                {[
-                  { id: 'vegetables', label: 'Vegetables', icon: Carrot, count: selectedVegetables.length, activeStyle: 'bg-[#10b981] text-white shadow-[0_4px_12px_rgba(16,185,129,0.3)]', defaultStyle: 'text-text-secondary hover:bg-white/5 hover:text-white' },
-                  { id: 'flour', label: 'Flour & Grains', icon: Wheat, count: selectedFlour.length, activeStyle: 'bg-[#f59e0b] text-white shadow-[0_4px_12px_rgba(245,158,11,0.3)]', defaultStyle: 'text-text-secondary hover:bg-white/5 hover:text-white' },
-                  { id: 'ingredients', label: 'Other Extras', icon: ShoppingBag, count: selectedIngredients.length, activeStyle: 'bg-accent text-white shadow-[0_4px_12px_rgba(37,116,120,0.3)]', defaultStyle: 'text-text-secondary hover:bg-white/5 hover:text-white' }
-                ].map((tab) => {
-                  const Icon = tab.icon;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 min-w-[150px] rounded-xl font-semibold transition-all duration-300 ${activeTab === tab.id ? tab.activeStyle : tab.defaultStyle}`}
-                    >
-                      <Icon size={18} />
-                      {tab.label}
-                      {tab.count > 0 && (
-                        <span className={`flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold ${activeTab === tab.id ? 'bg-white/20' : 'bg-bg-secondary border border-border-primary'}`}>
-                          {tab.count}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
+            {/* Selection Area */}
+            <div className="relative z-10 space-y-6">
+              <div className="relative group">
+                <Search size={22} className="absolute left-5 top-1/2 -translate-y-1/2 text-text-secondary group-focus-within:text-accent transition-colors" />
+                <input
+                  type="text"
+                  placeholder={`Search ${activeTab}...`}
+                  value={activeTab === 'vegetables' ? vegetableSearchQuery : activeTab === 'flour' ? flourSearchQuery : ingredientSearchQuery}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (activeTab === 'vegetables') setVegetableSearchQuery(val);
+                    else if (activeTab === 'flour') setFlourSearchQuery(val);
+                    else setIngredientSearchQuery(val);
+                  }}
+                  className="w-full pl-14 pr-12 py-5 bg-bg-primary/60 backdrop-blur-xl border-2 border-border-primary rounded-3xl text-lg font-medium transition-all focus:outline-none focus:border-accent focus:bg-bg-primary/90 shadow-lg"
+                />
               </div>
 
-              {/* Dynamic Content Area */}
-              <div className="bg-bg-primary/20 p-5 md:p-6 rounded-3xl border border-border-primary/50 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-48 h-48 rounded-full blur-[60px] opacity-20 pointer-events-none -mr-10 -mt-10 transition-colors duration-500 delay-75"
-                   style={{ backgroundColor: activeTab === 'vegetables' ? '#10b981' : activeTab === 'flour' ? '#f59e0b' : '#257478' }}>
-                </div>
-                
-                <div className="relative mb-5 z-10">
-                  <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                    <Search size={18} className="text-text-secondary" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder={`Search ${activeTab === 'vegetables' ? 'vegetables' : activeTab === 'flour' ? 'flours & grains' : 'other ingredients'}...`}
-                    value={activeTab === 'vegetables' ? vegetableSearchQuery : activeTab === 'flour' ? flourSearchQuery : ingredientSearchQuery}
-                    onChange={(e) => {
-                      if (activeTab === 'vegetables') setVegetableSearchQuery(e.target.value);
-                      else if (activeTab === 'flour') setFlourSearchQuery(e.target.value);
-                      else setIngredientSearchQuery(e.target.value);
-                    }}
-                    className="w-full pl-12 pr-12 py-3.5 bg-bg-secondary/80 backdrop-blur border border-border-primary rounded-2xl text-text-primary text-base transition-all duration-200 focus:outline-none focus:border-white/30 focus:shadow-[0_0_0_3px_rgba(255,255,255,0.05)]"
-                  />
-                  {(activeTab === 'vegetables' ? vegetableSearchQuery : activeTab === 'flour' ? flourSearchQuery : ingredientSearchQuery) && (
-                    <button
-                      onClick={() => {
-                        if (activeTab === 'vegetables') setVegetableSearchQuery('');
-                        else if (activeTab === 'flour') setFlourSearchQuery('');
-                        else setIngredientSearchQuery('');
-                      }}
-                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-text-secondary hover:text-white transition-colors"
-                    >
-                      <X size={18} />
-                    </button>
-                  )}
-                </div>
-
-                <div className="flex flex-wrap gap-2.5 max-h-[220px] overflow-y-auto px-1 py-1 custom-scrollbar relative z-10">
-                  {/* VEGETABLES LIST */}
-                  {activeTab === 'vegetables' && (
-                    filteredVegetableList.length === 0 ? (
-                      <div className="w-full text-center py-10 text-text-secondary italic flex flex-col items-center opacity-60">
-                        <Carrot size={40} className="mb-3 opacity-40" />
-                        No vegetables found.
-                      </div>
-                    ) : (
-                      filteredVegetableList.map((item, idx) => (
-                        <button
-                          key={`veg-${idx}`}
-                          onClick={() => toggleVegetable(item)}
-                          className={`px-4 py-2 md:px-5 md:py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border ${selectedVegetables.includes(item)
-                              ? 'bg-[#10b981] border-[#10b981] text-white shadow-[0_4px_15px_rgba(16,185,129,0.4)] md:-translate-y-0.5'
-                              : 'bg-bg-secondary border-border-primary text-text-secondary hover:border-white/40 hover:text-white hover:bg-bg-primary'
-                            }`}
-                        >
-                          {item}
-                        </button>
-                      ))
-                    )
-                  )}
-
-                  {/* FLOUR LIST */}
-                  {activeTab === 'flour' && (
-                    filteredFlourList.length === 0 ? (
-                      <div className="w-full text-center py-10 text-text-secondary italic flex flex-col items-center opacity-60">
-                        <Wheat size={40} className="mb-3 opacity-40" />
-                        No flours found.
-                      </div>
-                    ) : (
-                      filteredFlourList.map((item, idx) => (
-                        <button
-                          key={`flour-${idx}`}
-                          onClick={() => toggleFlour(item)}
-                          className={`px-4 py-2 md:px-5 md:py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border ${selectedFlour.includes(item)
-                              ? 'bg-[#f59e0b] border-[#f59e0b] text-white shadow-[0_4px_15px_rgba(245,158,11,0.4)] md:-translate-y-0.5'
-                              : 'bg-bg-secondary border-border-primary text-text-secondary hover:border-white/40 hover:text-white hover:bg-bg-primary'
-                            }`}
-                        >
-                          {item}
-                        </button>
-                      ))
-                    )
-                  )}
-
-                  {/* INGREDIENTS LIST */}
-                  {activeTab === 'ingredients' && (
-                    filteredIngredientList.length === 0 ? (
-                      <div className="w-full text-center py-10 text-text-secondary italic flex flex-col items-center opacity-60">
-                        <ShoppingBag size={40} className="mb-3 opacity-40" />
-                        No other ingredients found.
-                      </div>
-                    ) : (
-                      filteredIngredientList.map((item, idx) => (
-                        <button
-                          key={`ing-${idx}`}
-                          onClick={() => toggleIngredient(item)}
-                          className={`px-4 py-2 md:px-5 md:py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border ${selectedIngredients.includes(item)
-                              ? 'bg-accent border-accent text-white shadow-[0_4px_15px_rgba(37,116,120,0.4)] md:-translate-y-0.5'
-                              : 'bg-bg-secondary border-border-primary text-text-secondary hover:border-white/40 hover:text-white hover:bg-bg-primary'
-                            }`}
-                        >
-                          {item}
-                        </button>
-                      ))
-                    )
-                  )}
-                </div>
+              <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 max-h-[400px] overflow-y-auto px-1 py-2 custom-scrollbar pr-2">
+                {(activeTab === 'vegetables' ? filteredVegetableList : activeTab === 'flour' ? filteredFlourList : filteredIngredientList)
+                  .map((item, idx) => {
+                    const isSelected = activeTab === 'vegetables' ? selectedVegetables.includes(item) : activeTab === 'flour' ? selectedFlour.includes(item) : selectedIngredients.includes(item);
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          if (activeTab === 'vegetables') toggleVegetable(item);
+                          else if (activeTab === 'flour') toggleFlour(item);
+                          else toggleIngredient(item);
+                        }}
+                        className={`relative p-5 rounded-3xl text-sm md:text-base font-black border-2 transition-all duration-300 transform active:scale-95 ${
+                          isSelected 
+                            ? (activeTab === 'vegetables' ? 'bg-emerald-500 border-emerald-400 text-white shadow-[0_8px_20px_rgba(16,185,129,0.3)]' : activeTab === 'flour' ? 'bg-amber-500 border-amber-400 text-white shadow-[0_8px_20px_rgba(245,158,11,0.3)]' : 'bg-accent border-accent text-white shadow-[0_8px_20px_rgba(37,116,120,0.3)]')
+                            : 'bg-bg-primary/40 border-border-primary text-text-secondary hover:border-white/20 hover:text-white hover:bg-bg-primary/80'
+                        }`}
+                      >
+                        {isSelected && <X size={14} className="absolute top-3 right-3 opacity-60" />}
+                        <span className="line-clamp-1">{item}</span>
+                      </button>
+                    );
+                  })}
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-border-primary">
+            <div className="mt-8 pt-8 border-t-2 border-border-primary flex flex-col md:flex-row items-center justify-between gap-6">
               <button
                 onClick={() => { setSelectedIngredients([]); setSelectedVegetables([]); setSelectedFlour([]); }}
-                className={`py-3 px-6 rounded-xl font-medium transition-colors ${totalSelectedCount > 0 ? 'text-error hover:bg-error/10' : 'text-text-secondary opacity-50 cursor-not-allowed'}`}
+                className={`flex items-center gap-2 py-3 px-6 rounded-2xl font-black text-sm uppercase tracking-widest transition-all ${totalSelectedCount > 0 ? 'text-red-500 hover:bg-red-500/10' : 'text-text-secondary opacity-30 cursor-not-allowed'}`}
                 disabled={totalSelectedCount === 0}
               >
-                Clear Selection
+                Clear Panatry
               </button>
+              
               <button
                 onClick={() => setHasSearched(true)}
                 disabled={totalSelectedCount === 0 || filteredRecipes.length === 0}
-                className={`w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-bold text-lg transition-all duration-200 ${
+                className={`hidden md:flex items-center justify-center gap-3 px-10 py-5 rounded-[1.5rem] font-black text-xl transition-all shadow-xl ${
                   totalSelectedCount > 0 && filteredRecipes.length > 0
-                    ? 'bg-accent text-white hover:bg-accent-hover hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(37,116,120,0.4)]'
-                    : 'bg-white/5 border border-white/10 text-text-secondary cursor-not-allowed'
+                    ? 'bg-accent text-white hover:bg-accent-hover hover:-translate-y-1 hover:shadow-[0_12px_25px_rgba(37,116,120,0.4)]'
+                    : 'bg-white/5 border-2 border-white/5 text-text-secondary cursor-not-allowed'
                 }`}
               >
-                {totalSelectedCount === 0 ? 'Select Items' : filteredRecipes.length === 0 ? 'No Matches' : `Find Recipes (${filteredRecipes.length})`}
-                <ArrowRight size={20} className={totalSelectedCount > 0 && filteredRecipes.length > 0 ? "opacity-100" : "opacity-50"} />
+                {totalSelectedCount === 0 ? 'Pick Ingredients' : `Show ${filteredRecipes.length} Recipes`}
+                <ArrowRight size={24} className={totalSelectedCount > 0 ? "animate-bounce-subtle ml-2" : "opacity-30"} />
               </button>
             </div>
           </div>
@@ -456,7 +345,7 @@ const CookNow = () => {
     );
   }
 
-  // STEP 2: Recipe Results UI
+  // STEP 2: Matching UI
   return (
     <div key="results-step" className="min-h-screen pt-32 md:pt-44 pb-12 px-6 max-w-[1200px] mx-auto animate-in fade-in duration-500">
       <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -464,189 +353,148 @@ const CookNow = () => {
           <div className="flex flex-wrap items-center gap-3 mb-6">
             <button
               onClick={() => navigate('/')}
-              className="group flex items-center gap-2 px-4 py-2 bg-bg-secondary border border-border-primary rounded-full font-medium text-xs md:text-sm text-text-secondary transition-all duration-300 hover:text-white hover:border-accent hover:shadow-[0_0_15px_rgba(37,116,120,0.2)] hover:-translate-x-0.5"
+              className="group flex items-center gap-2 px-4 py-2 bg-bg-secondary border border-border-primary rounded-full font-bold text-xs md:text-sm text-text-secondary hover:text-white transition-all"
             >
-              <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" />
+              <ArrowLeft size={14} />
               Dashboard
             </button>
-            <span className="text-border-primary text-sm">/</span>
+            <span className="text-border-primary">/</span>
             <button
               onClick={() => setHasSearched(false)}
-              className="group flex items-center gap-2 px-4 py-2 bg-accent/10 border border-accent/20 rounded-full font-medium text-xs md:text-sm text-accent transition-all duration-300 hover:bg-accent hover:border-accent hover:shadow-[0_0_15px_rgba(37,116,120,0.4)] hover:text-white"
+              className="group flex items-center gap-2 px-4 py-2 bg-accent/20 border border-accent/40 rounded-full font-bold text-xs md:text-sm text-accent hover:bg-accent hover:text-white transition-all"
             >
-              <ChefHat size={14} className="group-hover:rotate-12 transition-transform" />
-              Edit Ingredients
+              <ChefHat size={14} />
+              Edit kitchen
             </button>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">Your Recipe Matches</h1>
-          <p className="text-text-secondary text-lg max-w-2xl" title={[...selectedIngredients, ...selectedVegetables, ...selectedFlour].join(', ')}>
-            Based on: <span className="text-white font-medium">
-              {totalSelectedCount > 0 
-                ? (totalSelectedCount > 6 ? `${[...selectedIngredients, ...selectedVegetables, ...selectedFlour].slice(0, 6).join(', ')}...` : [...selectedIngredients, ...selectedVegetables, ...selectedFlour].join(', ')) 
-                : 'All items'}
-            </span>
+          <h1 className="text-4xl md:text-6xl font-black mb-4">Matches!</h1>
+          <p className="text-text-secondary text-lg max-w-2xl leading-relaxed">
+            Finding joy with <span className="text-white font-bold">{totalSelectedCount} ingredients</span>.
           </p>
         </div>
 
-        <div className="flex flex-col gap-4 w-full md:w-auto md:min-w-[300px]">
-          <div className="flex bg-[#171717] p-1 rounded-xl border border-white/5 shadow-md">
+        <div className="flex flex-col gap-4 w-full md:w-auto md:min-w-[320px]">
+          <div className="flex bg-bg-secondary p-1.5 rounded-2xl border border-border-primary shadow-xl">
             {['All', 'Veg', 'Non-Veg'].map(type => (
               <button
                 key={type}
                 onClick={() => setDietFilter(type)}
-                className={`flex-1 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 text-center flex items-center justify-center gap-2 ${dietFilter === type
-                    ? type === 'Veg' ? 'bg-[#10b981]/20 text-[#10b981]' : type === 'Non-Veg' ? 'bg-[#ef4444]/20 text-[#ef4444]' : 'bg-white/10 text-white'
+                className={`flex-1 px-4 py-2.5 rounded-xl text-xs md:text-sm font-black transition-all text-center flex items-center justify-center gap-2 ${dietFilter === type
+                    ? (type === 'Veg' ? 'bg-emerald-500/20 text-emerald-400' : type === 'Non-Veg' ? 'bg-red-500/20 text-red-500' : 'bg-white/10 text-white')
                     : 'text-text-secondary hover:text-white hover:bg-white/5'
                   }`}
               >
                 {type}
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${dietFilter === type ? 'bg-white/10' : 'bg-white/5 border border-white/5'}`}>
+                <span className={`text-[10px] px-2 py-0.5 rounded-lg border ${dietFilter === type ? 'bg-white/10 border-white/10' : 'border-transparent'}`}>
                   {dietCounts[type]}
                 </span>
               </button>
             ))}
           </div>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search size={18} className="text-text-secondary" />
-            </div>
-            <input
-              type="text"
-              placeholder="Search by title, vegetable, or flour..."
-              value={recipeSearchQuery}
-              onChange={(e) => setRecipeSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-10 py-3 bg-bg-secondary border border-border-primary rounded-xl text-text-primary transition-all duration-200 focus:outline-none focus:border-accent"
-            />
-            {recipeSearchQuery && (
-              <button
-                onClick={() => setRecipeSearchQuery('')}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-secondary hover:text-white transition-colors"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
         </div>
       </div>
 
       {filteredRecipes.length === 0 ? (
-        <div className="text-center py-20 bg-bg-secondary border border-border-primary rounded-3xl">
-          <ChefHat size={64} className="mx-auto text-text-secondary mb-6 opacity-30" />
-          <h3 className="text-2xl font-semibold mb-3 text-text-primary">No exact matches</h3>
-          <p className="text-text-secondary max-w-md mx-auto mb-8">
-            We couldn't find any recipes that match at least 40% of your ingredients. Try adding more items or clearing your selection!
+        <div className="text-center py-20 bg-bg-secondary border border-border-primary rounded-[2.5rem] shadow-2xl">
+          <ChefHat size={80} className="mx-auto text-text-secondary mb-8 opacity-20 animate-pulse" />
+          <h3 className="text-3xl font-black mb-4">No perfect match yet</h3>
+          <p className="text-text-secondary text-lg max-w-md mx-auto mb-10">
+            Keep searching! Try adding more essentials or checking our "Others" section.
           </p>
           <button
             onClick={() => setHasSearched(false)}
-            className="px-6 py-3 rounded-xl font-medium transition-all duration-200 border border-border-primary hover:bg-white/5 hover:text-white"
+            className="px-8 py-4 bg-accent text-white rounded-2xl font-black hover:scale-105 transition-all shadow-lg"
           >
-            Change Ingredients
+            Adjust Pantry
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
           {filteredRecipes.map((recipe, index) => (
-            <div key={recipe.id || index} className="flex flex-col bg-bg-secondary border border-border-primary rounded-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_15px_30px_-10px_rgba(0,0,0,0.5)] hover:border-white/10 group">
-              <div className="relative h-48 overflow-hidden bg-[#222]">
+            <div key={recipe.id || index} className="flex flex-col bg-bg-secondary border-2 border-border-primary rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:-translate-y-3 hover:shadow-[0_20px_40px_rgba(0,0,0,0.6)] hover:border-white/10 group">
+              <div className="relative h-60 overflow-hidden bg-[#222]">
                 <img
                   src={recipe.image_url || 'https://res.cloudinary.com/dw4j19xmz/image/upload/v1773396970/Remove_background_project_3_new_nyocqk.png'}
                   alt={recipe.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   onError={(e) => { 
                     e.target.src = 'https://res.cloudinary.com/dw4j19xmz/image/upload/v1773396970/Remove_background_project_3_new_nyocqk.png';
-                    e.target.classList.add('p-8', 'object-contain', 'bg-[#1a1a1a]'); 
+                    e.target.classList.add('p-12', 'object-contain', 'bg-[#1a1a1a]'); 
                   }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-bg-secondary via-transparent to-transparent opacity-80"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-bg-secondary via-transparent to-transparent opacity-90"></div>
                 
-                {/* Diet Badge (Top Right) */}
-                <div className="absolute top-4 right-4 z-10">
-                  <div className={`p-1.5 rounded-lg backdrop-blur-md border ${
+                <div className="absolute top-6 right-6 z-10">
+                  <div className={`p-2 rounded-xl backdrop-blur-md border ${
                     recipe.category?.toLowerCase() === 'veg' 
-                      ? 'bg-[#10b981]/10 border-[#10b981]/30' 
-                      : 'bg-[#ef4444]/10 border-[#ef4444]/30'
+                      ? 'bg-emerald-500/10 border-emerald-500/30' 
+                      : 'bg-red-500/10 border-red-500/30'
                   }`}>
-                    <div className={`w-3.5 h-3.5 border-2 rounded-sm flex items-center justify-center ${
-                      recipe.category?.toLowerCase() === 'veg' ? 'border-[#10b981]' : 'border-[#ef4444]'
+                    <div className={`w-4 h-4 border-2 rounded-sm flex items-center justify-center ${
+                      recipe.category?.toLowerCase() === 'veg' ? 'border-emerald-500' : 'border-red-500'
                     }`}>
-                      <div className={`w-1.5 h-1.5 rounded-full ${
-                        recipe.category?.toLowerCase() === 'veg' ? 'bg-[#10b981]' : 'bg-[#ef4444]'
+                      <div className={`w-2 h-2 rounded-full ${
+                        recipe.category?.toLowerCase() === 'veg' ? 'bg-emerald-500' : 'bg-red-500'
                       }`} />
                     </div>
                   </div>
                 </div>
 
-                {/* Missing Ingredients Badge (Top Left) */}
                 {totalSelectedCount > 0 && recipe.missingIngredients?.length > 0 && (
-                  <div className="absolute top-4 left-4 z-10 animate-in fade-in zoom-in duration-300">
-                    <div className="px-3 py-1.5 rounded-lg backdrop-blur-md bg-red-500/20 border border-red-500/30 text-red-500 text-xs font-bold shadow-lg flex items-center gap-1.5">
-                      <span className="flex h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse"></span>
-                      +{recipe.missingIngredients.length} Needs
+                  <div className="absolute top-6 left-6 z-10">
+                    <div className="px-4 py-2 rounded-xl backdrop-blur-md bg-red-500/20 border border-red-500/30 text-red-500 text-xs font-black shadow-lg flex items-center gap-2">
+                      <X size={14} />
+                      {recipe.missingIngredients.length} MISSING
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="p-8 flex flex-col flex-1">
+                <h3 className="text-2xl font-black text-white mb-4 line-clamp-2 leading-tight">{recipe.title}</h3>
+                
+                {totalSelectedCount > 0 && (
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between text-sm mb-2 font-black">
+                      <span className="text-accent">{Math.round(recipe.matchPercentage)}% MATCH</span>
+                      <span className="text-text-secondary flex items-center gap-1.5"><Clock size={16} />{recipe.totalTimeMinutes}m</span>
+                    </div>
+                    <div className="w-full bg-border-primary rounded-full h-2 overflow-hidden shadow-inner">
+                      <div className="bg-gradient-to-r from-accent to-emerald-400 h-full transition-all duration-1000" style={{ width: `${recipe.matchPercentage}%` }}></div>
                     </div>
                   </div>
                 )}
 
-                {/* Save/Favorite Buttons (Bottom) */}
-                <div className="absolute bottom-4 left-4 right-4 z-10 flex items-center justify-between opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                  <div className="flex items-center gap-2">
+                <div className="space-y-4 mb-8">
+                  <p className="text-sm text-text-secondary line-clamp-3">
+                    <span className="font-black text-white uppercase text-[10px] tracking-widest block mb-1">Needs:</span>
+                    {[...(recipe.ingredients || []), ...(recipe.vegetables || []), ...(recipe.flour || [])].join(', ')}
+                  </p>
+                </div>
+
+                <div className="mt-auto pt-6 border-t border-border-primary flex items-center gap-4">
+                  <button 
+                    onClick={() => {
+                      addRecent(recipe);
+                      navigate(`/recipe/${recipe._id || recipe.id}`);
+                    }}
+                    className="flex-1 py-4.5 bg-accent text-white rounded-[1.25rem] font-black text-sm uppercase tracking-widest shadow-lg hover:bg-accent-hover hover:-translate-y-1 active:scale-95 transition-all"
+                  >
+                    View Recipe
+                  </button>
+                  <div className="flex gap-2">
                     <button 
                       onClick={(e) => { e.stopPropagation(); toggleFavorite(recipe._id || recipe.id); }}
-                      className={`w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md border transition-all duration-300 ${
+                      className={`w-12 h-12 rounded-[1rem] flex items-center justify-center backdrop-blur-md border transition-all duration-300 ${
                         favoriteRecipes.includes(recipe._id || recipe.id) 
                           ? 'bg-red-500 border-red-500 text-white shadow-lg' 
-                          : 'bg-black/40 border-white/20 text-white hover:bg-red-500/40 hover:border-red-500'
+                          : 'bg-white/5 border-white/20 text-white hover:bg-red-500/20'
                       }`}
                     >
-                      <Heart size={16} fill={favoriteRecipes.includes(recipe._id || recipe.id) ? "currentColor" : "none"} />
-                    </button>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); toggleSaved(recipe._id || recipe.id); }}
-                      className={`w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md border transition-all duration-300 ${
-                        savedRecipes.includes(recipe._id || recipe.id) 
-                          ? 'bg-accent border-accent text-white shadow-lg' 
-                          : 'bg-black/40 border-white/20 text-white hover:bg-accent/40 hover:border-accent'
-                      }`}
-                    >
-                      <Bookmark size={16} fill={savedRecipes.includes(recipe._id || recipe.id) ? "currentColor" : "none"} />
+                      <Heart size={20} fill={favoriteRecipes.includes(recipe._id || recipe.id) ? "currentColor" : "none"} />
                     </button>
                   </div>
                 </div>
-              </div>
-              <div className="p-5 flex flex-col flex-1">
-                <h3 className="text-lg font-bold text-white mb-2 line-clamp-2">{recipe.title}</h3>
-                {totalSelectedCount > 0 && recipe.matchPercentage > 0 && (
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between text-xs mb-1.5">
-                      <span className="text-accent font-semibold">{Math.round(recipe.matchPercentage)}% Match</span>
-                      <span className="text-text-secondary flex items-center gap-1"><Clock size={12} />{recipe.totalTimeMinutes} mins</span>
-                    </div>
-                    <div className="w-full bg-border-primary rounded-full h-1.5 overflow-hidden">
-                      <div className="bg-accent h-full transition-all duration-500" style={{ width: `${recipe.matchPercentage}%` }}></div>
-                    </div>
-                  </div>
-                )}
-                <p className="text-sm text-text-secondary mb-4 my-auto">
-                  <span className="font-semibold text-[#f8fafc] mb-1 block">Includes:</span>
-                  {[...(recipe.ingredients || []), ...(recipe.vegetables || []), ...(recipe.flour || [])]
-                    .map(i => typeof i === 'string' ? i : '')
-                    .filter(i => i !== '')
-                    .join(', ')}
-                </p>
-                {totalSelectedCount > 0 && recipe.missingIngredients?.length > 0 && (
-                  <div className="mb-4 mt-auto">
-                    <span className="font-semibold text-[#ef4444] text-[10px] uppercase tracking-wider mb-1 block opacity-80">Missing:</span>
-                    <p className="text-xs text-text-secondary line-clamp-2">{recipe.missingIngredients.join(', ')}</p>
-                  </div>
-                )}
-                <button 
-                  onClick={() => {
-                    addRecent(recipe);
-                    navigate(`/recipe/${recipe._id || recipe.id}`);
-                  }}
-                  className="w-full mt-auto py-3 rounded-xl font-semibold text-sm transition-all duration-200 bg-white/5 border border-white/10 text-white group-hover:bg-accent group-hover:border-accent"
-                >
-                  View Recipe
-                </button>
               </div>
             </div>
           ))}
